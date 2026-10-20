@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control de Tienda - SURTY</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- SDKs de Firebase para Firestore y Messaging -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
+    
+    <!-- Libreria Html5-Qrcode para el lector de barras -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        @keyframes scanLine {
+            0% { top: 0%; }
+            50% { top: 95%; }
+            100% { top: 0%; }
+        }
+        .animate-scan {
+            animation: scanLine 2s infinite linear;
+        }
+
+        @media screen and (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        /* --- CONTROL DE COLORES MODO CLARO POR DEFECTO --- */
+        body {
+            background-color: #F1F5F9;
+            color: #0F172A;
+        }
+        input, select, textarea {
+            background-color: #FFFFFF !important;
+            color: #0F172A !important;
+            border-color: #CBD5E1 !important;
+        }
+        input:disabled, select:disabled, input[readonly], select[readonly] {
+            background-color: #E2E8F0 !important;
+            color: #1E293B !important;
+            -webkit-text-fill-color: #1E293B !important;
+            opacity: 1 !important;
+        }
+        input::placeholder {
+            color: #64748B !important;
+        }
+
+        /* --- CONTROL DE COLORES MODO OSCURO --- */
+        body.dark-mode {
+            background-color: #0B1329 !important;
+            color: #F8FAFC !important;
+        }
+        body.dark-mode .bg-white {
+            background-color: #151D36 !important;
+            color: #F8FAFC !important;
+            border-color: #334155 !important;
+        }
+        body.dark-mode .text-slate-800, 
+        body.dark-mode .text-slate-700,
+        body.dark-mode .text-slate-900,
+        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4 {
+            color: #FFFFFF !important;
+        }
+        body.dark-mode .text-slate-600, 
+        body.dark-mode .text-slate-500,
+        body.dark-mode label {
+            color: #CBD5E1 !important;
+        }
+        body.dark-mode .text-slate-400 {
+            color: #94A3B8 !important;
+        }
+        body.dark-mode input, 
+        body.dark-mode select, 
+        body.dark-mode textarea {
+            background-color: #1E293B !important;
+            color: #FFFFFF !important;
+            border-color: #475569 !important;
+        }
+        body.dark-mode input:disabled, 
+        body.dark-mode select:disabled, 
+        body.dark-mode input[readonly], 
+        body.dark-mode select[readonly] {
+            background-color: #0F172A !important;
+            color: #F8FAFC !important;
+            -webkit-text-fill-color: #F8FAFC !important;
+        }
+        body.dark-mode input::placeholder {
+            color: #64748B !important;
+        }
+        body.dark-mode .bg-slate-50 {
+            background-color: #0F172A !important;
+            border-color: #334155 !important;
+        }
+        body.dark-mode .bg-slate-100 {
+            background-color: #1E293B !important;
+            color: #F8FAFC !important;
+        }
+        body.dark-mode .divide-y > * {
+            border-color: #334155 !important;
+        }
+        body.dark-mode tr.hover\:bg-slate-50:hover {
+            background-color: #1E293B !important;
+        }
+
+        #reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: 0.75rem;
+        }
+
+        .scroll-desplegable {
+            max-height: 220px !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+        }
+    </style>
+</head>
+<body class="bg-[#0B1329] text-slate-100 min-h-screen p-4 md:p-8 transition-colors duration-200 dark-mode">
+
+    <!-- NOTIFICACION FLOTANTE -->
+    <div id="notificacion-flotante" class="fixed top-4 right-4 z-50 hidden bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all">
+        <span class="text-xl">&#128276;</span>
+        <div>
+            <h4 id="titulo-notif" class="font-bold text-xs uppercase text-amber-400">Nueva Alerta</h4>
+            <p id="texto-notif" class="text-sm">Mensaje aqui</p>
+        </div>
+        <button onclick="ocultarNotificacion()" class="text-slate-400 hover:text-white ml-2 font-bold">&#10005;</button>
+    </div>
+
+    <!-- MENÚ LATERAL (DRAWER) -->
+    <div id="menu-lateral" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden transition-opacity">
+        <div class="absolute inset-y-0 left-0 max-w-xs w-full bg-[#151D36] p-6 shadow-2xl flex flex-col justify-between border-r border-slate-700">
+            <div>
+                <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-blue-500 font-bold text-xl">&#128295;</span>
+                        <h2 class="font-bold text-white text-base tracking-wider" id="titulo-menu-lateral">PISO DE VENTA</h2>
+                    </div>
+                    <button type="button" onclick="cerrarMenuLateral()" class="text-slate-400 hover:text-white text-xl font-bold p-1">&#10005;</button>
+                </div>
+                <div class="space-y-3" id="opciones-menu-lateral">
+                    <!-- Opciones dinámicas según el rol -->
+                </div>
+            </div>
+            <div class="border-t border-slate-700 pt-4 space-y-3">
+                <button type="button" onclick="toggleDarkMode()" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                    &#127769; Modo Claro / Oscuro
+                </button>
+                <button type="button" onclick="cerrarSesion(); cerrarMenuLateral();" class="w-full text-center bg-red-950/50 hover:bg-red-900/60 text-red-400 border border-red-900/50 p-3.5 rounded-xl font-semibold transition flex items-center justify-center gap-2">
+                    &#128682; Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE LOGIN -->
+    <div id="pantalla-login" class="max-w-md mx-auto mt-8 bg-white p-8 rounded-2xl shadow-xl">
+        <div class="text-center mb-6">
+            <div class="w-36 mx-auto mb-2">
+                <svg viewBox="0 0 500 450" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto drop-shadow-md">
+                    <path d="M 100 310 C 100 380 230 380 230 310 L 230 180 C 230 110 150 110 150 160 C 150 200 230 200 230 240 L 230 310" stroke="#1d4ed8" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M 230 230 L 330 110" stroke="#1d4ed8" stroke-width="42" stroke-linecap="round"/>
+                    <text x="250" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="52" fill="#1e293b" letter-spacing="12">SURTY</text>
+                </svg>
+            </div>
+            <p class="text-sm text-slate-500">Selecciona tu modo de acceso</p>
+        </div>
+
+        <div class="flex bg-slate-100 p-1 rounded-xl mb-6">
+            <button type="button" onclick="cambiarTabLogin('piso')" id="tab-login-piso" class="flex-1 py-2 text-sm font-semibold rounded-lg transition bg-white text-blue-600 shadow">Piso de Venta</button>
+            <button type="button" onclick="cambiarTabLogin('almacen')" id="tab-login-almacen" class="flex-1 py-2 text-sm font-semibold rounded-lg transition text-slate-600">Almacen (Admin)</button>
+        </div>
+
+        <div id="mensaje-error" class="hidden mb-4 p-3 bg-red-100 border border-red-300 text-red-700 text-xs rounded-lg font-medium text-center"></div>
+
+        <form id="form-login-piso" onsubmit="loginPiso(event)" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Usuario del Vendedor</label>
+                <input type="text" id="usuario-vendedor" required placeholder="Ej. julio" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Contraseña</label>
+                <div class="relative">
+                    <input type="password" id="password-vendedor" required placeholder="••••••••" class="w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <button type="button" onclick="togglePassword('password-vendedor', 'icon-eye-vendedor')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                        <span id="icon-eye-vendedor" class="text-base">&#128065;</span>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" id="btn-login-piso" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow">Entrar a Piso de Venta</button>
+        </form>
+
+        <form id="form-login-almacen" onsubmit="entrarAlmacenDirecto(event)" class="space-y-4 hidden">
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Contraseña de Administrador (Almacén)</label>
+                <div class="relative">
+                    <input type="password" id="password-almacen" required placeholder="••••••••" class="w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-slate-700 focus:outline-none">
+                    <button type="button" onclick="togglePassword('password-almacen', 'icon-eye-almacen')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                        <span id="icon-eye-almacen" class="text-base">&#128065;</span>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="w-full bg-slate-800 text-white py-2.5 rounded-lg font-medium hover:bg-slate-900 transition shadow">Entrar a Almacen</button>
+        </form>
+    </div>
+
+    <!-- APLICACION PRINCIPAL -->
+    <div id="app-principal" class="max-w-3xl mx-auto hidden">
+        <header class="bg-white shadow rounded-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="abrirMenuLateral()" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-white transition shadow flex items-center justify-center font-bold text-lg" title="Abrir Menú">
+                    &#9776;
+                </button>
+                <div class="w-12">
+                    <svg viewBox="0 0 500 450" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
+                        <path d="M 100 310 C 100 380 230 380 230 310 L 230 180 C 230 110 150 110 150 160 C 150 200 230 200 230 240 L 230 310" stroke="#1d4ed8" stroke-width="45" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 230 230 L 330 110" stroke="#1d4ed8" stroke-width="45" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800" id="titulo-panel">Control de Tienda - SURTY</h1>
+                    <p class="text-sm text-slate-500" id="info-usuario">Sesion activa</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" onclick="toggleDarkMode()" class="bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1 shadow-sm" title="Cambiar Modo Claro/Oscuro">&#127769; Modo</button>
+                <button type="button" onclick="cerrarSesion()" class="bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60 px-4 py-2 rounded-lg text-sm font-semibold transition">Cerrar Sesion</button>
+            </div>
+        </header>
+
+        <!-- VISTA: PISO DE VENTA -->
+        <div id="vista-piso" class="hidden">
+            <div class="bg-white rounded-xl shadow relative">
+                <div onclick="toggleFormularioPedido()" class="p-4 bg-slate-50 border-b flex justify-between items-center cursor-pointer hover:bg-slate-100 transition rounded-t-xl">
+                    <h2 class="text-lg font-bold text-slate-700 flex items-center gap-2">
+                        &#128722; Solicitar Mercancia
+                        <span id="flecha-surtido" class="text-xs text-slate-500 transition-transform duration-200">&#9660;</span>
+                    </h2>
+                    <button type="button" onclick="event.stopPropagation(); abrirModalListaTemporal();" id="btn-ver-lista-temporal" class="bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-lg text-xs hover:bg-amber-200 transition shadow-sm hidden">
+                        &#128221; Lista (<span id="count-lista-temporal">0</span>)
+                    </button>
+                </div>
+                
+                <div id="cuerpo-formulario-pedido" class="p-6 hidden">
+                    <form id="form-pedido" onsubmit="agregarAListaTemporal(event)" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded-lg border">
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-slate-500">Vendedor</label>
+                                <span id="display-vendedor" class="text-sm font-bold text-slate-800 dark:text-white">-</span>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-slate-500">Tipo / Prioridad</label>
+                                <span id="display-prioridad" class="text-sm font-bold text-blue-600 dark:text-blue-400">Surtido</span>
+                                <input type="hidden" id="prioridad" value="Surtido">
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Codigo del Articulo</label>
+                            <div id="sugerencias-codigo" class="absolute z-50 left-0 right-0 bottom-full mb-1 bg-white dark:bg-slate-800 border rounded-lg shadow-2xl scroll-desplegable hidden divide-y"></div>
+
+                            <div class="flex gap-2">
+                                <input type="text" id="codigo" required autocomplete="off" placeholder="Ej. A-102" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <button type="button" onclick="buscarReferenciaCatalogo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition flex items-center justify-center shadow" title="Buscar referencia">
+                                    🔍
+                                </button>
+                                <button type="button" onclick="abrirScanner()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-lg transition flex items-center justify-center shadow" title="Escanear con cámara">
+                                    📷
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="mensaje-busqueda-codigo" class="hidden text-xs"></div>
+
+                        <div id="seccion-detalles-pedido" class="space-y-3 hidden">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="col-span-2">
+                                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Descripcion</label>
+                                    <input type="text" id="descripcion" readonly placeholder="Descripción del artículo" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Categoria</label>
+                                    <select id="categoria" disabled class="w-full px-2 py-2 border rounded-lg text-sm focus:outline-none font-semibold">
+                                        <option value="Dama">Dama</option>
+                                        <option value="Caballero">Caballero</option>
+                                        <option value="Ni&ntilde;o">Ni&ntilde;o</option>
+                                        <option value="Hogar">Hogar</option>
+                                        <option value="Intimo">Intimo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Tallas</label>
+                                <button type="button" onclick="toggleModalTallas()" class="w-full bg-slate-50 dark:bg-slate-800 border text-slate-700 dark:text-slate-200 py-2 px-3 rounded-lg text-xs font-semibold text-left flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700">
+                                    <span id="texto-boton-tallas">Elegir Tallas...</span>
+                                    <span>&#9660;</span>
+                                </button>
+                                <div id="contenedor-tallas-seleccionadas" class="flex flex-wrap gap-1 p-1.5 mt-1 bg-slate-50 dark:bg-slate-800 border rounded-lg min-h-[34px] items-center">
+                                    <span class="text-[10px] text-slate-400 italic">Ninguna</span>
+                                </div>
+                            </div>
+
+                            <div id="seccion-surtido" class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-1">Tipo Gancho</label>
+                                    <select id="tipoGancho" class="w-full px-2 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                        <option value="Ninguno">Ninguno</option>
+                                        <option value="Nuevo">Nuevo</option>
+                                        <option value="Viejo">Viejo</option>
+                                        <option value="Madera">Madera</option>
+                                        <option value="Pinzas">Pinzas</option>
+                                        <option value="Peque&ntilde;o">Peque&ntilde;o</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-1">Cantidad</label>
+                                    <input type="number" id="cantidad" min="0" placeholder="" class="w-full px-2 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                                <div id="contenedor-detalle-surtido">
+                                    <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-1">Detalle</label>
+                                    <input type="text" id="opcional" placeholder="Ej. Azul..." class="w-full px-2 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <div id="contenedor-detalle-cliente" class="hidden">
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Detalle</label>
+                                <input type="text" id="opcional-cliente" placeholder="Ej. Color azul o detalles..." class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+
+                            <button type="submit" class="w-full bg-slate-800 text-white py-2.5 rounded-lg font-bold hover:bg-slate-900 transition text-sm shadow">
+                                + A&ntilde;adir a Lista
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="seccion-enviar-almacen-directo" class="mt-3 hidden">
+                        <button type="button" onclick="enviarListaTemporalAAlmacen()" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 transition text-sm shadow animate-pulse">
+                            Enviar a Almacen (<span id="count-boton-enviar">0</span>)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA: ALMACEN (Admin) -->
+        <div id="vista-almacen" class="bg-white p-6 rounded-xl shadow hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-700">&#128230; Panel de Almacen (Gestion General)</h2>
+                    <p class="text-xs text-slate-500">Administra pedidos, catálogo de referencias y accesos.</p>
+                </div>
+                <span id="contador-pendientes" class="bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-full">0 pendientes</span>
+            </div>
+
+            <!-- SECCIÓN: PEDIDOS -->
+            <div id="seccion-almacen-pedidos">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-3 mb-4 bg-slate-50 p-3 rounded-xl border">
+                    <div class="flex gap-2 flex-wrap w-full md:w-auto">
+                        <button type="button" onclick="filtrarAlmacen('TODOS')" id="btn-filtro-todos" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white shadow">Todos</button>
+                        <button type="button" onclick="filtrarAlmacen('SOLICITADO')" id="btn-filtro-solicitado" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border hover:bg-slate-100">Pendientes</button>
+                        <button type="button" onclick="filtrarAlmacen('EN_PREPARACION')" id="btn-filtro-preparacion" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border hover:bg-slate-100">En Preparacion</button>
+                    </div>
+                    <div class="w-full md:w-72">
+                        <input type="text" id="busqueda-almacen" oninput="renderizarTablas()" placeholder="  Buscar codigo, vendedor o descripcion..." class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b text-xs uppercase text-slate-400 font-semibold">
+                                <th class="py-3 px-3">Vendedor / Prio</th>
+                                <th class="py-3 px-3">Codigo / Tipo</th>
+                                <th class="py-3 px-3">Estado General</th>
+                                <th class="py-3 px-3 text-right">Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-almacen" class="text-sm divide-y">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN: CATÁLOGO -->
+            <div id="seccion-almacen-catalogo" class="hidden space-y-4">
+                <div class="bg-slate-50 p-4 rounded-xl border">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3">&#128218; Registrar / Escanear Referencia en el Catálogo</h3>
+                    <form onsubmit="guardarEnCatalogo(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div class="flex gap-2">
+                            <input type="text" id="cat-codigo" required placeholder="Código o barra" class="w-full px-3 py-2 border rounded-lg text-xs">
+                            <button type="button" onclick="abrirScannerCatalogo()" class="bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-slate-900 transition text-xs shadow" title="Escanear referencia">&#128247;</button>
+                        </div>
+                        <input type="text" id="cat-descripcion" required placeholder="Descripción completa del artículo" class="px-3 py-2 border rounded-lg text-xs md:col-span-1">
+                        <select id="cat-categoria" class="px-2 py-2 border rounded-lg text-xs">
+                            <option value="Dama">Dama</option>
+                            <option value="Caballero">Caballero</option>
+                            <option value="Ni&ntilde;o">Ni&ntilde;o</option>
+                            <option value="Hogar">Hogar</option>
+                            <option value="Intimo">Intimo</option>
+                        </select>
+                        <button type="submit" class="bg-blue-600 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-blue-700 transition shadow">Guardar en Catálogo</button>
+                    </form>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <h4 class="font-bold text-xs text-slate-600 uppercase">Referencias Registradas en el Sistema</h4>
+                    <input type="text" id="busqueda-catalogo" oninput="renderizarTablaCatalogo()" placeholder="Buscar en catálogo..." class="px-3 py-1 border rounded-lg text-xs w-60">
+                </div>
+
+                <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b text-xs uppercase text-slate-400 font-semibold sticky top-0 bg-white dark:bg-slate-900">
+                                <th class="py-3 px-3">Código</th>
+                                <th class="py-3 px-3">Descripción</th>
+                                <th class="py-3 px-3">Categoría</th>
+                                <th class="py-3 px-3 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-catalogo" class="text-sm divide-y">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN: VENDEDORES -->
+            <div id="seccion-almacen-vendedores" class="hidden space-y-4">
+                <div class="bg-slate-50 p-4 rounded-xl border">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3">&#128100; Registrar Nuevo Vendedor</h3>
+                    <form onsubmit="crearVendedor(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input type="text" id="nuevo-nombre" required placeholder="Nombre completo (ej. Maria Perez)" class="px-3 py-2 border rounded-lg text-xs">
+                        <input type="text" id="nuevo-usuario" required placeholder="Usuario para login (ej. maria)" class="px-3 py-2 border rounded-lg text-xs">
+                        <input type="password" id="nuevo-password" required placeholder="Contrase&ntilde;a" class="px-3 py-2 border rounded-lg text-xs">
+                        <button type="submit" class="md:col-span-3 bg-blue-600 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-blue-700 transition shadow">Crear y Autorizar Acceso</button>
+                    </form>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b text-xs uppercase text-slate-400 font-semibold">
+                                <th class="py-3 px-3">Nombre</th>
+                                <th class="py-3 px-3">Usuario de Acceso</th>
+                                <th class="py-3 px-3">Estado en App</th>
+                                <th class="py-3 px-3 text-right">Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-vendedores" class="text-sm divide-y">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALES Y ALERTAS -->
+    <div id="modal-alerta" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 text-center border border-slate-200 dark:border-slate-800">
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">⚠️</div>
+            <h3 id="titulo-modal-alerta" class="font-bold text-slate-800 dark:text-white text-lg">Aviso</h3>
+            <p id="texto-modal-alerta" class="text-xs text-slate-600 dark:text-slate-300">Mensaje de alerta.</p>
+            <button type="button" onclick="cerrarModalAlerta()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700 transition text-sm shadow">Entendido</button>
+        </div>
+    </div>
+
+    <!-- MODAL TABLA ESTADO DE SOLICITUDES EN TIENDA -->
+    <div id="modal-tabla-piso" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center border-b pb-3 dark:border-slate-700">
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">&#128221; Estado de Solicitudes en Tienda</h2>
+                <button type="button" onclick="cerrarModalTablaPiso()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Toca cualquier fila para ver detalles o gestionar</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b text-xs uppercase text-slate-400 font-semibold">
+                            <th class="py-3 px-3">Codigo / Vendedor</th>
+                            <th class="py-3 px-3">Descripcion</th>
+                            <th class="py-3 px-3">Tallas / Prio.</th>
+                            <th class="py-3 px-3">Estado</th>
+                            <th class="py-3 px-3 text-right">Accion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-piso" class="text-sm divide-y">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-lista-temporal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 relative border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center border-b pb-3 dark:border-slate-700">
+                <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">&#128221; Articulos Agregados</h3>
+                <button type="button" onclick="cerrarModalListaTemporal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
+            </div>
+            <div id="contenido-lista-temporal" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+            <div class="border-t dark:border-slate-700 pt-3 flex flex-col gap-2">
+                <button type="button" onclick="enviarListaTemporalAAlmacen()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700 transition text-sm shadow">Enviar a Almacen</button>
+                <button type="button" onclick="cerrarModalListaTemporal()" class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-2 rounded-xl text-xs hover:bg-slate-200 dark:hover:bg-slate-700">Seguir agregando</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-gestion-almacen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center border-b pb-3 dark:border-slate-700">
+                <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2" id="titulo-modal-almacen">&#128230; Detalle de Pedidos</h3>
+                <button type="button" onclick="cerrarGestionAlmacen()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
+            </div>
+            <div id="contenido-detalle-almacen" class="space-y-4 text-sm text-slate-600"></div>
+            <div class="border-t dark:border-slate-700 pt-3" id="acciones-detalle-almacen"></div>
+        </div>
+    </div>
+
+    <div id="modal-gestion-piso" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center border-b pb-3 dark:border-slate-700">
+                <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">&#128221; Detalle de tu Solicitud</h3>
+                <button type="button" onclick="cerrarGestionPiso()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
+            </div>
+            <div id="contenido-detalle-piso" class="space-y-3 text-sm text-slate-600"></div>
+            <div class="border-t dark:border-slate-700 pt-3 flex flex-col gap-2" id="acciones-detalle-piso"></div>
+        </div>
+    </div>
+
+    <div id="modal-tallas" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-xs w-full p-5 space-y-4 border border-slate-200 dark:border-slate-800">
+            <h3 class="font-bold text-slate-800 dark:text-white text-base border-b dark:border-slate-700 pb-2">Seleccionar Tallas</h3>
+            <div>
+                <label class="flex items-center gap-2 p-2 bg-blue-50/70 dark:bg-blue-950/40 rounded border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100">
+                    <input type="checkbox" id="chk-todas" onchange="toggleTodasTallas(this)" class="accent-blue-600 rounded">
+                    <span class="font-bold text-xs text-blue-700 dark:text-blue-300">Todas las tallas</span>
+                </label>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-sm max-h-60 overflow-y-auto pr-1">
+                <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700 cursor-pointer hover:bg-blue-50">
+                    <input type="checkbox" value="S" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-800 dark:text-slate-200">S</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700 cursor-pointer hover:bg-blue-50">
+                    <input type="checkbox" value="M" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-800 dark:text-slate-200">M</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700 cursor-pointer hover:bg-blue-50">
+                    <input type="checkbox" value="L" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-800 dark:text-slate-200">L</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700 cursor-pointer hover:bg-blue-50">
+                    <input type="checkbox" value="XL" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-800 dark:text-slate-200">XL</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700 cursor-pointer hover:bg-blue-50">
+                    <input type="checkbox" value="2X" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-800 dark:text-slate-200">2X</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700 cursor-pointer hover:bg-blue-50">
+                    <input type="checkbox" value="3X" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-800 dark:text-slate-200">3X</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700 cursor-pointer hover:bg-blue-50">
+                    <input type="checkbox" value="4X" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-800 dark:text-slate-200">4X</span>
+                </label>
+            </div>
+            <button type="button" onclick="toggleModalTallas()" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg text-sm hover:bg-blue-700">Aceptar y Cerrar</button>
+        </div>
+    </div>
+
+    <div id="modal-scanner" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50 transition-all">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4 relative border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center border-b pb-3 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">&#128247;</span>
+                    <h3 id="titulo-modal-scanner" class="font-bold text-slate-800 dark:text-white text-base">Escáner de Alta Precisión</h3>
+                </div>
+                <button type="button" onclick="cerrarScanner()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg p-1">&#10005;</button>
+            </div>
+            
+            <div class="relative w-full h-64 bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center">
+                <div id="reader" class="w-full h-full"></div>
+                <div class="absolute inset-4 border-2 border-dashed border-white/40 rounded-xl pointer-events-none flex items-center justify-center">
+                    <div class="w-56 h-28 border-2 border-blue-500 rounded-lg relative overflow-hidden bg-blue-500/10">
+                        <div class="absolute w-full h-1 bg-red-500 shadow-[0_0_12px_red] animate-scan"></div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-xs text-center text-slate-500 dark:text-slate-400 font-medium">Apunta al código de barras o QR.</p>
+
+            <div class="flex gap-3 pt-1">
+                <button type="button" id="btn-linterna" onclick="toggleFlash()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow flex items-center justify-center gap-2">
+                    <span>&#128262;</span> Linterna
+                </button>
+                <button type="button" onclick="cerrarScanner()" class="flex-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-2.5 rounded-xl text-sm transition">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTRAR SERVICE WORKER DE PWA Y FCM -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/pwabuilder-sw.js').catch(err => console.log('Error PWA SW:', err));
+      }
+    </script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0lWrRNwHYdLr_0TIXVsD9YY2MNJhpEug",
+            authDomain: "countx-29a0f.firebaseapp.com",
+            projectId: "countx-29a0f",
+            storageBucket: "countx-29a0f.firebasestorage.app",
+            messagingSenderId: "832115313401",
+            appId: "1:832115313401:web:f5bbea3a4eefe39a18f028",
+            measurementId: "G-24TKLFG0RK"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            console.log("Persistencia offline no disponible:", err.code);
+        });
+
+        // Inicializar Firebase Cloud Messaging (FCM)
+        let messaging = null;
+        try {
+            if (firebase.messaging.isSupported()) {
+                messaging = firebase.messaging();
+                
+                if ('Notification' in window) {
+                    Notification.requestPermission().then((permission) => {
+                        if (permission === 'granted') {
+                            navigator.serviceWorker.register('/firebase-messaging-sw.js').then((registration) => {
+                                messaging.getToken({ 
+                                    serviceWorkerRegistration: registration,
+                                    vapidKey: '' 
+                                }).then((currentToken) => {
+                                    if (currentToken) {
+                                        console.log('Token FCM obtenido con éxito.');
+                                    }
+                                }).catch((err) => console.log('No se pudo obtener token FCM:', err));
+                            });
+                        }
+                    });
+                }
+            }
+        } catch(e) {
+            console.log('FCM no soportado en este entorno.');
+        }
+
+        let usuarioActual = null;
+        let nombreVendedor = '';
+        let idUsuarioActualPiso = '';
+        let heartbeatTimer = null;
+        let pedidos = [];
+        let listaVendedores = [];
+        let listaCatalogo = [];
+        let mapaVendedoresEstado = {};
+        let modoEscannerActual = 'piso';
+        
+        let listaTemporalVendedor = [];
+        const borradorGuardado = localStorage.getItem('surty_borrador');
+        if (borradorGuardado) {
+            try {
+                listaTemporalVendedor = JSON.parse(borradorGuardado);
+            } catch(e) {}
+        }
+
+        let tallasSeleccionadas = [];
+        let html5QrCode = null;
+        let torchActive = false;
+        let primerCarga = true;
+        let filtroAlmacenActual = 'TODOS';
+        let darkModeActive = true;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            actualizarUIListaTemporal();
+            iniciarEscuchaCatalogo();
+            configurarAutocompletadoCodigo();
+
+            const sesionGuardada = localStorage.getItem('surty_sesion');
+            if (sesionGuardada) {
+                try {
+                    const datos = JSON.parse(sesionGuardada);
+                    if (datos.tipo === 'piso') {
+                        nombreVendedor = datos.nombre;
+                        usuarioActual = 'piso';
+                        idUsuarioActualPiso = datos.id;
+                        
+                        document.getElementById('display-vendedor').innerText = nombreVendedor;
+                        actualizarVistaPrioridad();
+
+                        document.getElementById('pantalla-login').classList.add('hidden');
+                        document.getElementById('app-principal').classList.remove('hidden');
+                        document.getElementById('vista-piso').classList.remove('hidden');
+                        document.getElementById('vista-almacen').classList.add('hidden');
+                        document.getElementById('titulo-panel').innerText = `Piso de Venta - Vendedor: ${nombreVendedor}`;
+                        document.getElementById('info-usuario').innerText = `Conectado como Piso de Venta`;
+                        
+                        db.collection('vendedores').doc(idUsuarioActualPiso).set({
+                            conectado: true,
+                            ultimaConexion: Date.now()
+                        }, { merge: true }).catch(() => {});
+
+                        if (heartbeatTimer) clearInterval(heartbeatTimer);
+                        heartbeatTimer = setInterval(() => {
+                            if (usuarioActual === 'piso' && idUsuarioActualPiso) {
+                                db.collection('vendedores').doc(idUsuarioActualPiso).set({
+                                    conectado: true,
+                                    ultimaConexion: Date.now()
+                                }, { merge: true }).catch(err => {});
+                            }
+                        }, 15000);
+
+                        renderizarTablas();
+                    } else if (datos.tipo === 'almacen') {
+                        usuarioActual = 'almacen';
+                        document.getElementById('pantalla-login').classList.add('hidden');
+                        document.getElementById('app-principal').classList.remove('hidden');
+                        document.getElementById('vista-almacen').classList.remove('hidden');
+                        document.getElementById('vista-piso').classList.add('hidden');
+                        document.getElementById('titulo-panel').innerText = `Panel de Almacen (Administrador)`;
+                        document.getElementById('info-usuario').innerText = `Control Total de Inventario y Accesos`;
+                        
+                        iniciarEscuchaVendedores();
+                        renderizarTablas();
+                    }
+                } catch(e) {
+                    localStorage.removeItem('surty_sesion');
+                }
+            }
+        });
+
+        // ==========================================
+        // FUNCIONES DEL MENÚ LATERAL (DRAWER)
+        // ==========================================
+        function abrirMenuLateral() {
+            const tituloMenu = document.getElementById('titulo-menu-lateral');
+            const opcionesMenu = document.getElementById('opciones-menu-lateral');
+
+            if (usuarioActual === 'almacen') {
+                if (tituloMenu) tituloMenu.innerText = 'ALMACÉN';
+                if (opcionesMenu) {
+                    opcionesMenu.innerHTML = `
+                        <button type="button" onclick="seleccionarOpcionMenu('pedidos-almacen')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                            &#128230; Pedidos
+                        </button>
+                        <button type="button" onclick="seleccionarOpcionMenu('catalogo-almacen')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                            &#128218; Catálogo (Productos Guardados)
+                        </button>
+                        <button type="button" onclick="seleccionarOpcionMenu('vendedores-almacen')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                            &#128100; Vendedores
+                        </button>
+                    `;
+                }
+            } else {
+                if (tituloMenu) tituloMenu.innerText = 'PISO DE VENTA';
+                if (opcionesMenu) {
+                    opcionesMenu.innerHTML = `
+                        <button type="button" onclick="seleccionarOpcionMenu('surtido')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                            &#128722; Surtido
+                        </button>
+                        <button type="button" onclick="seleccionarOpcionMenu('cliente')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                            &#128100; Cliente
+                        </button>
+                        <button type="button" onclick="seleccionarOpcionMenu('estado')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                            &#128221; Estado de Solicitudes
+                        </button>
+                    `;
+                }
+            }
+            document.getElementById('menu-lateral').classList.remove('hidden');
+        }
+
+        function cerrarMenuLateral() {
+            document.getElementById('menu-lateral').classList.add('hidden');
+        }
+
+        function seleccionarOpcionMenu(opcion) {
+            cerrarMenuLateral();
+            const cuerpo = document.getElementById('cuerpo-formulario-pedido');
+            
+            if (opcion === 'surtido') {
+                if (cuerpo && cuerpo.classList.contains('hidden')) {
+                    toggleFormularioPedido();
+                }
+                document.getElementById('prioridad').value = 'Surtido';
+                document.getElementById('display-prioridad').innerText = 'Surtido';
+                actualizarVistaPrioridad();
+                cuerpo.scrollIntoView({ behavior: 'smooth' });
+            } else if (opcion === 'cliente') {
+                if (cuerpo && cuerpo.classList.contains('hidden')) {
+                    toggleFormularioPedido();
+                }
+                document.getElementById('prioridad').value = 'Cliente';
+                document.getElementById('display-prioridad').innerText = 'Cliente';
+                actualizarVistaPrioridad();
+                cuerpo.scrollIntoView({ behavior: 'smooth' });
+            } else if (opcion === 'estado') {
+                abrirModalTablaPiso();
+            } else if (opcion === 'pedidos-almacen') {
+                cambiarTabAlmacen('pedidos');
+            } else if (opcion === 'catalogo-almacen') {
+                cambiarTabAlmacen('catalogo');
+            } else if (opcion === 'vendedores-almacen') {
+                cambiarTabAlmacen('vendedores');
+            }
+        }
+
+        function abrirModalTablaPiso() {
+            document.getElementById('modal-tabla-piso').classList.remove('hidden');
+        }
+
+        function cerrarModalTablaPiso() {
+            document.getElementById('modal-tabla-piso').classList.add('hidden');
+        }
+
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.innerHTML = "&#128064;";
+            } else {
+                input.type = "password";
+                icon.innerHTML = "&#128065;";
+            }
+        }
+
+        function toggleFormularioPedido() {
+            const cuerpo = document.getElementById('cuerpo-formulario-pedido');
+            const flecha = document.getElementById('flecha-surtido');
+            if (cuerpo) {
+                cuerpo.classList.toggle('hidden');
+                if (flecha) {
+                    flecha.style.transform = cuerpo.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+                }
+            }
+        }
+
+        document.addEventListener("visibilitychange", function() {
+            if (document.visibilityState === "visible") {
+                if (db && typeof db.enableNetwork === 'function') {
+                    db.enableNetwork().catch(err => {});
+                }
+                renderizarTablas();
+                if (usuarioActual === 'piso' && idUsuarioActualPiso) {
+                    db.collection('vendedores').doc(idUsuarioActualPiso).set({
+                        conectado: true,
+                        ultimaConexion: Date.now()
+                    }, { merge: true }).catch(err => {});
+                }
+            }
+        });
+
+        function mostrarError(mensaje) {
+            const el = document.getElementById('mensaje-error');
+            if(el) {
+                el.innerText = mensaje;
+                el.classList.remove('hidden');
+            }
+        }
+
+        function ocultarError() {
+            const el = document.getElementById('mensaje-error');
+            if(el) el.classList.add('hidden');
+        }
+
+        function mostrarModalAlerta(titulo, mensaje) {
+            document.getElementById('titulo-modal-alerta').innerText = titulo;
+            document.getElementById('texto-modal-alerta').innerText = mensaje;
+            document.getElementById('modal-alerta').classList.remove('hidden');
+        }
+
+        function cerrarModalAlerta() {
+            document.getElementById('modal-alerta').classList.add('hidden');
+        }
+
+        function toggleDarkMode() {
+            darkModeActive = !darkModeActive;
+            document.body.classList.toggle('dark-mode', darkModeActive);
+        }
+
+        function filtrarAlmacen(estado) {
+            filtroAlmacenActual = estado;
+            const btnTodos = document.getElementById('btn-filtro-todos');
+            const btnSol = document.getElementById('btn-filtro-solicitado');
+            const btnPrep = document.getElementById('btn-filtro-preparacion');
+
+            [btnTodos, btnSol, btnPrep].forEach(b => {
+                if(b) b.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border hover:bg-slate-100 shadow-sm";
+            });
+
+            if (estado === 'TODOS' && btnTodos) btnTodos.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white shadow";
+            if (estado === 'SOLICITADO' && btnSol) btnSol.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white shadow";
+            if (estado === 'EN_PREPARACION' && btnPrep) btnPrep.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow";
+
+            renderizarTablas();
+        }
+
+        function cambiarTabAlmacen(tab) {
+            const secPedidos = document.getElementById('seccion-almacen-pedidos');
+            const secCatalogo = document.getElementById('seccion-almacen-catalogo');
+            const secVendedores = document.getElementById('seccion-almacen-vendedores');
+
+            [secPedidos, secCatalogo, secVendedores].forEach(s => {
+                if(s) s.classList.add('hidden');
+            });
+
+            if (tab === 'pedidos') {
+                if(secPedidos) secPedidos.classList.remove('hidden');
+            } else if (tab === 'catalogo') {
+                if(secCatalogo) secCatalogo.classList.remove('hidden');
+                renderizarTablaCatalogo();
+            } else if (tab === 'vendedores') {
+                if(secVendedores) secVendedores.classList.remove('hidden');
+            }
+        }
+
+        function iniciarEscuchaCatalogo() {
+            db.collection('catalogo').onSnapshot(snapshot => {
+                listaCatalogo = [];
+                snapshot.forEach(doc => {
+                    listaCatalogo.push({ id: doc.id, ...doc.data() });
+                });
+                renderizarTablaCatalogo();
+            });
+        }
+
+        function configurarAutocompletadoCodigo() {
+            const inputCodigo = document.getElementById('codigo');
+            const sugDiv = document.getElementById('sugerencias-codigo');
+
+            if (!inputCodigo || !sugDiv) return;
+
+            inputCodigo.addEventListener('input', function() {
+                const query = this.value.trim().toLowerCase();
+                if (!query || query.length < 1) {
+                    sugDiv.classList.add('hidden');
+                    return;
+                }
+
+                const filtrados = listaCatalogo.filter(item => 
+                    item.codigo.toLowerCase().includes(query) || 
+                    item.descripcion.toLowerCase().includes(query)
+                );
+
+                if (filtrados.length === 0) {
+                    sugDiv.classList.add('hidden');
+                    return;
+                }
+
+                let html = '';
+                filtrados.forEach(item => {
+                    html += `
+                        <div onclick="seleccionarSugerenciaCatalogo('${item.codigo}', '${item.descripcion.replace(/'/g, "\\'")}', '${item.categoria}')" class="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs border-b last:border-b-0 flex items-center justify-between">
+                            <div>
+                                <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">${item.codigo}</span> - 
+                                <span class="text-slate-700 dark:text-slate-200 font-medium">${item.descripcion}</span>
+                            </div>
+                            <span class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300">${item.categoria}</span>
+                        </div>
+                    `;
+                });
+                sugDiv.innerHTML = html;
+                sugDiv.classList.remove('hidden');
+
+                setTimeout(() => {
+                    sugDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 50);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!inputCodigo.contains(e.target) && !sugDiv.contains(e.target)) {
+                    sugDiv.classList.add('hidden');
+                }
+            });
+        }
+
+        function seleccionarSugerenciaCatalogo(codigo, descripcion, categoria) {
+            document.getElementById('codigo').value = codigo;
+            document.getElementById('sugerencias-codigo').classList.add('hidden');
+            
+            const descInput = document.getElementById('descripcion');
+            const catInput = document.getElementById('categoria');
+            const seccionDetalles = document.getElementById('seccion-detalles-pedido');
+
+            descInput.value = descripcion;
+            catInput.value = categoria;
+
+            if (seccionDetalles) seccionDetalles.classList.remove('hidden');
+            document.getElementById('mensaje-busqueda-codigo').classList.add('hidden');
+
+            setTimeout(() => {
+                const cant = document.getElementById('cantidad');
+                if (cant) cant.focus();
+            }, 100);
+        }
+
+        function guardarEnCatalogo(e) {
+            e.preventDefault();
+            const codigo = document.getElementById('cat-codigo').value.trim();
+            const descripcion = document.getElementById('cat-descripcion').value.trim();
+            const categoria = document.getElementById('cat-categoria').value;
+
+            if (!codigo || !descripcion) return alert("Completa el código y la descripción");
+
+            const existe = listaCatalogo.some(item => item.codigo.toLowerCase() === codigo.toLowerCase());
+            if (existe) {
+                mostrarModalAlerta(
+                    "Referencia Ya Existente", 
+                    `¡El código "${codigo}" ya se encuentra registrado en el catálogo!`
+                );
+                return;
+            }
+
+            db.collection('catalogo').doc(codigo).set({
+                codigo,
+                descripcion,
+                categoria,
+                actualizado: Date.now()
+            }).then(() => {
+                alert("¡Referencia guardada en el catálogo correctamente!");
+                document.getElementById('cat-codigo').value = '';
+                document.getElementById('cat-descripcion').value = '';
+                document.getElementById('cat-codigo').focus();
+            }).catch(err => alert("Error al guardar: " + err.message));
+        }
+
+        function renderizarTablaCatalogo() {
+            const tbody = document.getElementById('tabla-catalogo');
+            if (!tbody) return;
+
+            const filtro = document.getElementById('busqueda-catalogo') ? document.getElementById('busqueda-catalogo').value.toLowerCase().trim() : '';
+            
+            const filtrados = listaCatalogo.filter(item => 
+                item.codigo.toLowerCase().includes(filtro) || 
+                item.descripcion.toLowerCase().includes(filtro) ||
+                item.categoria.toLowerCase().includes(filtro)
+            );
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">No hay referencias en el catálogo</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            filtrados.forEach(item => {
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-3 font-mono font-bold text-blue-600 dark:text-blue-400">${item.codigo}</td>
+                        <td class="py-3 px-3 text-slate-800 dark:text-slate-200 font-medium">${item.descripcion}</td>
+                        <td class="py-3 px-3"><span class="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs px-2 py-0.5 rounded-full font-semibold">${item.categoria}</span></td>
+                        <td class="py-3 px-3 text-right">
+                            <button type="button" onclick="eliminarDelCatalogo('${item.codigo}')" class="bg-red-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold hover:bg-red-600 shadow">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function eliminarDelCatalogo(codigo) {
+            if (confirm(`¿Estás seguro de eliminar la referencia "${codigo}" del catálogo?`)) {
+                db.collection('catalogo').doc(codigo).delete().catch(err => alert("Error al eliminar: " + err.message));
+            }
+        }
+
+        function buscarReferenciaCatalogo() {
+            const codigo = document.getElementById('codigo').value.trim();
+            const mensajeEl = document.getElementById('mensaje-busqueda-codigo');
+            const seccionDetalles = document.getElementById('seccion-detalles-pedido');
+            const sugDiv = document.getElementById('sugerencias-codigo');
+            
+            if (sugDiv) sugDiv.classList.add('hidden');
+
+            if (!codigo) {
+                if (mensajeEl) {
+                    mensajeEl.innerText = "⚠️ Ingresa o escanea un código primero.";
+                    mensajeEl.className = "text-xs mt-1 font-medium text-amber-600 dark:text-amber-400";
+                    mensajeEl.classList.remove('hidden');
+                }
+                return;
+            }
+
+            db.collection('catalogo').doc(codigo).get().then(doc => {
+                const descInput = document.getElementById('descripcion');
+                const catInput = document.getElementById('categoria');
+
+                if (doc.exists) {
+                    const data = doc.data();
+                    descInput.value = data.descripcion || '';
+                    if (data.categoria) catInput.value = data.categoria;
+
+                    if (mensajeEl) mensajeEl.classList.add('hidden');
+                    if (seccionDetalles) seccionDetalles.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        const cant = document.getElementById('cantidad');
+                        if (cant) cant.focus();
+                    }, 100);
+                } else {
+                    mostrarModalAlerta(
+                        "Referencia No Encontrada", 
+                        `El código "${codigo}" no existe en el catálogo. Los vendedores no pueden registrar referencias nuevas; solicite a Almacén que la agregue.`
+                    );
+                    if (mensajeEl) {
+                        mensajeEl.innerText = "❌ Referencia no registrada en el catálogo";
+                        mensajeEl.className = "text-xs mt-1 font-medium text-red-500 dark:text-red-400";
+                        mensajeEl.classList.remove('hidden');
+                    }
+                    if (seccionDetalles) seccionDetalles.classList.add('hidden');
+                }
+            }).catch(err => console.error("Error buscando referencia:", err));
+        }
+
+        function actualizarVistaPrioridad() {
+            const prioridad = document.getElementById('prioridad').value;
+            const seccionSurtido = document.getElementById('seccion-surtido');
+            const contenedorDetalleCliente = document.getElementById('contenedor-detalle-cliente');
+            const seccionDetalles = document.getElementById('seccion-detalles-pedido');
+            const mensajeEl = document.getElementById('mensaje-busqueda-codigo');
+
+            if (mensajeEl) mensajeEl.classList.add('hidden');
+
+            document.getElementById('codigo').value = '';
+            document.getElementById('descripcion').value = '';
+            document.getElementById('cantidad').value = '';
+            document.getElementById('opcional').value = '';
+            document.getElementById('opcional-cliente').value = '';
+            if (seccionDetalles) seccionDetalles.classList.add('hidden');
+
+            if (prioridad === 'Cliente') {
+                seccionSurtido.classList.add('hidden');
+                seccionSurtido.classList.remove('grid');
+                contenedorDetalleCliente.classList.remove('hidden');
+            } else {
+                seccionSurtido.classList.remove('hidden');
+                seccionSurtido.classList.add('grid');
+                contenedorDetalleCliente.classList.add('hidden');
+            }
+        }
+
+        function crearVendedor(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('nuevo-nombre').value.trim();
+            const usuario = document.getElementById('nuevo-usuario').value.trim().toLowerCase();
+            const password = document.getElementById('nuevo-password').value.trim();
+
+            if (!nombre || !usuario || !password) return alert("Completa todos los campos");
+
+            db.collection('vendedores').doc(usuario).set({
+                nombre,
+                usuario,
+                password,
+                conectado: false,
+                ultimaConexion: 0,
+                creado: Date.now()
+            }).then(() => {
+                alert("Vendedor creado con éxito.");
+                document.getElementById('nuevo-nombre').value = '';
+                document.getElementById('nuevo-usuario').value = '';
+                document.getElementById('nuevo-password').value = '';
+            }).catch(err => alert("Error al crear vendedor: " + err.message));
+        }
+
+        function iniciarEscuchaVendedores() {
+            db.collection('vendedores').onSnapshot(snapshot => {
+                listaVendedores = [];
+                mapaVendedoresEstado = {};
+                const ahora = Date.now();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    listaVendedores.push({ id: doc.id, ...data });
+
+                    let conectadoReal = false;
+                    if (data.conectado && data.ultimaConexion) {
+                        conectadoReal = (ahora - data.ultimaConexion < 45000);
+                    }
+                    mapaVendedoresEstado[data.nombre] = conectadoReal;
+                    mapaVendedoresEstado[doc.id] = conectadoReal;
+                });
+                renderizarTablaVendedores();
+                renderizarTablas();
+            });
+        }
+
+        function renderizarTablaVendedores() {
+            const tbody = document.getElementById('tabla-vendedores');
+            if (!tbody) return;
+            if (listaVendedores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">No hay vendedores registrados</td></tr>`;
+                return;
+            }
+            let html = '';
+            const ahora = Date.now();
+            listaVendedores.forEach(v => {
+                let conectadoReal = false;
+                if (v.conectado && v.ultimaConexion) {
+                    conectadoReal = (ahora - v.ultimaConexion < 45000);
+                }
+
+                let colorLuz = conectadoReal ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500';
+                let textoEstado = conectadoReal ? 'Conectado (En la app)' : 'Desconectado';
+
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full inline-block ${colorLuz}" title="${textoEstado}"></span>
+                            ${v.nombre}
+                        </td>
+                        <td class="py-3 px-3 font-mono text-xs text-blue-600 dark:text-blue-400">${v.id}</td>
+                        <td class="py-3 px-3">
+                            <span class="text-xs px-2.5 py-1 rounded-full font-semibold ${conectadoReal ? 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300'}">
+                                ${textoEstado}
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-right">
+                            <button type="button" onclick="eliminarVendedor('${v.id}')" class="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-600 shadow">Eliminar / Revocar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function obtenerLuzEstado(nombreVendedorStr) {
+            const conectado = mapaVendedoresEstado[nombreVendedorStr] || false;
+            let colorLuz = conectado ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500';
+            let titulo = conectado ? 'Conectado en la app' : 'No conectado';
+            return `<span class="w-2.5 h-2.5 rounded-full inline-block ${colorLuz} ml-1.5 align-middle" title="${titulo}"></span>`;
+        }
+
+        function eliminarVendedor(id) {
+            if (confirm(`¿Estás seguro de revocar el acceso al usuario "${id}"?`)) {
+                db.collection('vendedores').doc(id).delete().catch(err => alert("Error al eliminar: " + err.message));
+            }
+        }
+
+        function reproducirSonidoYAlerta(titulo, mensaje) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    const audioCtx = new AudioContext();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                }
+            } catch(e) {}
+
+            if ("vibrate" in navigator) {
+                try { navigator.vibrate([400, 200, 400]); } catch(e) {}
+            }
+
+            const notif = document.getElementById('notificacion-flotante');
+            const txtNotif = document.getElementById('texto-notif');
+            const titNotif = document.getElementById('titulo-notif');
+            if (notif && txtNotif && titNotif) {
+                titNotif.innerText = titulo;
+                txtNotif.innerText = mensaje;
+                notif.classList.remove('hidden');
+                setTimeout(() => notif.classList.add('hidden'), 6000);
+            }
+        }
+
+        function ocultarNotificacion() {
+            document.getElementById('notificacion-flotante').classList.add('hidden');
+        }
+
+        function cambiarTabLogin(tipo) {
+            ocultarError();
+            const btnPiso = document.getElementById('tab-login-piso');
+            const btnAlmacen = document.getElementById('tab-login-almacen');
+            const formPiso = document.getElementById('form-login-piso');
+            const formAlmacen = document.getElementById('form-login-almacen');
+
+            if (tipo === 'piso') {
+                btnPiso.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition bg-white text-blue-600 shadow";
+                btnAlmacen.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition text-slate-600";
+                formPiso.classList.remove('hidden');
+                formAlmacen.classList.add('hidden');
+            } else {
+                btnAlmacen.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition bg-white text-slate-800 shadow";
+                btnPiso.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition text-slate-600";
+                formAlmacen.classList.remove('hidden');
+                formPiso.classList.add('hidden');
+            }
+        }
+
+        function loginPiso(e) {
+            e.preventDefault();
+            ocultarError();
+            const usuario = document.getElementById('usuario-vendedor').value.trim().toLowerCase();
+            const password = document.getElementById('password-vendedor').value.trim();
+            if (!usuario || !password) return mostrarError("Por favor ingresa usuario y contraseña.");
+
+            const btnLogin = document.getElementById('btn-login-piso');
+            if (btnLogin) btnLogin.innerText = "Verificando...";
+
+            db.collection('vendedores').doc(usuario).get().then((doc) => {
+                if (!doc.exists) {
+                    if (btnLogin) btnLogin.innerText = "Entrar a Piso de Venta";
+                    return mostrarError("El usuario no existe o fue eliminado.");
+                }
+
+                const data = doc.data();
+                if (data.password !== password) {
+                    if (btnLogin) btnLogin.innerText = "Entrar a Piso de Venta";
+                    return mostrarError("Contraseña incorrecta.");
+                }
+
+                nombreVendedor = data.nombre;
+                usuarioActual = 'piso';
+                idUsuarioActualPiso = usuario;
+                
+                localStorage.setItem('surty_sesion', JSON.stringify({
+                    tipo: 'piso',
+                    id: idUsuarioActualPiso,
+                    nombre: nombreVendedor
+                }));
+
+                db.collection('vendedores').doc(idUsuarioActualPiso).set({
+                    conectado: true,
+                    ultimaConexion: Date.now()
+                }, { merge: true });
+
+                if (heartbeatTimer) clearInterval(heartbeatTimer);
+                heartbeatTimer = setInterval(() => {
+                    if (usuarioActual === 'piso' && idUsuarioActualPiso) {
+                        db.collection('vendedores').doc(idUsuarioActualPiso).set({
+                            conectado: true,
+                            ultimaConexion: Date.now()
+                        }, { merge: true }).catch(err => {});
+                    }
+                }, 15000);
+
+                document.getElementById('display-vendedor').innerText = nombreVendedor;
+                actualizarVistaPrioridad();
+
+                document.getElementById('pantalla-login').classList.add('hidden');
+                document.getElementById('app-principal').classList.remove('hidden');
+                document.getElementById('vista-piso').classList.remove('hidden');
+                document.getElementById('vista-almacen').classList.add('hidden');
+                document.getElementById('titulo-panel').innerText = `Piso de Venta - Vendedor: ${nombreVendedor}`;
+                document.getElementById('info-usuario').innerText = `Conectado como Piso de Venta`;
+                
+                if (btnLogin) btnLogin.innerText = "Entrar a Piso de Venta";
+                renderizarTablas();
+                setTimeout(() => {
+                    const inputCodigo = document.getElementById('codigo');
+                    if(inputCodigo) inputCodigo.focus();
+                }, 100);
+            }).catch(err => {
+                if (btnLogin) btnLogin.innerText = "Entrar a Piso de Venta";
+                mostrarError("Error de conexion al verificar usuario.");
+            });
+        }
+
+        function entrarAlmacenDirecto(e) {
+            if (e) e.preventDefault();
+            ocultarError();
+            const pass = document.getElementById('password-almacen').value.trim();
+            
+            if (pass !== 'surty1234') {
+                return mostrarError("Contraseña de administrador incorrecta.");
+            }
+
+            usuarioActual = 'almacen';
+
+            localStorage.setItem('surty_sesion', JSON.stringify({
+                tipo: 'almacen'
+            }));
+
+            document.getElementById('pantalla-login').classList.add('hidden');
+            document.getElementById('app-principal').classList.remove('hidden');
+            document.getElementById('vista-almacen').classList.remove('hidden');
+            document.getElementById('vista-piso').classList.add('hidden');
+            document.getElementById('titulo-panel').innerText = `Panel de Almacen (Administrador)`;
+            document.getElementById('info-usuario').innerText = `Control Total de Inventario y Accesos`;
+            
+            iniciarEscuchaVendedores();
+            renderizarTablas();
+        }
+
+        function cerrarSesion() {
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+            if (usuarioActual === 'piso' && idUsuarioActualPiso) {
+                db.collection('vendedores').doc(idUsuarioActualPiso).update({ conectado: false, ultimaConexion: 0 }).catch(() => {});
+            }
+
+            localStorage.removeItem('surty_sesion');
+            localStorage.removeItem('surty_borrador');
+
+            usuarioActual = null;
+            idUsuarioActualPiso = '';
+            nombreVendedor = '';
+            listaTemporalVendedor = [];
+
+            document.getElementById('form-pedido').reset();
+            document.getElementById('usuario-vendedor').value = '';
+            document.getElementById('password-vendedor').value = '';
+            document.getElementById('password-almacen').value = '';
+
+            tallasSeleccionadas = [];
+            actualizarTallas();
+            actualizarUIListaTemporal();
+
+            document.getElementById('app-principal').classList.add('hidden');
+            document.getElementById('pantalla-login').classList.remove('hidden');
+        }
+
+        function toggleModalTallas() {
+            document.getElementById('modal-tallas').classList.toggle('hidden');
+        }
+
+        function toggleTodasTallas(master) {
+            const checkboxes = document.querySelectorAll('.chk-talla');
+            checkboxes.forEach(cb => cb.checked = master.checked);
+            actualizarTallas();
+        }
+
+        function actualizarTallas() {
+            const checkboxes = document.querySelectorAll('.chk-talla');
+            const checkboxesChecked = document.querySelectorAll('.chk-talla:checked');
+            const chkTodas = document.getElementById('chk-todas');
+
+            if (chkTodas) chkTodas.checked = (checkboxes.length > 0 && checkboxes.length === checkboxesChecked.length);
+
+            tallasSeleccionadas = Array.from(checkboxesChecked).map(cb => cb.value);
+
+            const contenedor = document.getElementById('contenedor-tallas-seleccionadas');
+            const textoBoton = document.getElementById('texto-boton-tallas');
+
+            if (tallasSeleccionadas.length === 0) {
+                contenedor.innerHTML = `<span class="text-[10px] text-slate-400 italic">Ninguna</span>`;
+                textoBoton.innerText = "Elegir Tallas...";
+            } else if (checkboxes.length === checkboxesChecked.length) {
+                contenedor.innerHTML = `<span class="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-[10px] px-2 py-0.5 rounded-full font-bold">Todas</span>`;
+                textoBoton.innerText = "Tallas (Todas)";
+            } else {
+                contenedor.innerHTML = tallasSeleccionadas.map(t => 
+                    `<span class="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-[10px] px-1.5 py-0.5 rounded-full font-bold">${t}</span>`
+                ).join(' ');
+                textoBoton.innerText = `Tallas (${tallasSeleccionadas.length})`;
+            }
+        }
+
+        function abrirScanner(modo = 'piso') {
+            modoEscannerActual = modo;
+            document.getElementById('modal-scanner').classList.remove('hidden');
+            const tituloModal = document.getElementById('titulo-modal-scanner');
+            if (tituloModal) {
+                tituloModal.innerText = modo === 'catalogo' ? 'Escáner para Catálogo' : 'Escáner de Alta Precisión';
+            }
+            torchActive = false;
+            
+            if (html5QrCode) {
+                try {
+                    html5QrCode.stop().catch(() => {}).finally(() => {
+                        iniciarLectorCamara();
+                    });
+                    return;
+                } catch(e) {}
+            }
+            iniciarLectorCamara();
+        }
+
+        function abrirScannerCatalogo() {
+            abrirScanner('catalogo');
+        }
+
+        function iniciarLectorCamara() {
+            html5QrCode = new Html5Qrcode("reader");
+
+            const config = { 
+                fps: 15, 
+                qrbox: { width: 250, height: 130 },
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.QR_CODE
+                ]
+            };
+
+            const onSuccess = (decodedText) => {
+                if ("vibrate" in navigator) {
+                    try { navigator.vibrate(100); } catch(e) {}
+                }
+                
+                if (modoEscannerActual === 'catalogo') {
+                    document.getElementById('cat-codigo').value = decodedText;
+                    cerrarScanner();
+                    document.getElementById('cat-descripcion').focus();
+                } else {
+                    document.getElementById('codigo').value = decodedText;
+                    cerrarScanner();
+                    buscarReferenciaCatalogo();
+                }
+            };
+
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                onSuccess,
+                () => {}
+            ).catch((err) => {
+                html5QrCode.start(
+                    { facingMode: "user" },
+                    config,
+                    onSuccess,
+                    () => {}
+                ).catch((err2) => {
+                    alert("No se pudo acceder a la cámara.");
+                    cerrarScanner();
+                });
+            });
+        }
+
+        function toggleFlash() {
+            if (!html5QrCode || !html5QrCode.isScanning) return;
+            try {
+                const runningTrack = html5QrCode.getRunningTrackCapabilities();
+                if (runningTrack && runningTrack.torch !== undefined) {
+                    torchActive = !torchActive;
+                    html5QrCode.applyVideoConstraints({
+                        advanced: [{ torch: torchActive }]
+                    }).then(() => {
+                        const btn = document.getElementById('btn-linterna');
+                        if (btn) {
+                            btn.className = torchActive 
+                                ? "flex-1 bg-amber-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow ring-2 ring-amber-300 flex items-center justify-center gap-2"
+                                : "flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow flex items-center justify-center gap-2";
+                        }
+                    }).catch(err => {
+                        alert("La linterna no está soportada en este dispositivo.");
+                    });
+                } else {
+                    alert("La linterna no está soportada.");
+                }
+            } catch(e) {
+                alert("No se pudo activar la linterna.");
+            }
+        }
+
+        function cerrarScanner() {
+            document.getElementById('modal-scanner').classList.add('hidden');
+            if (html5QrCode) {
+                try {
+                    if (html5QrCode.isScanning) {
+                        html5QrCode.stop().then(() => {
+                            html5QrCode.clear();
+                        }).catch(() => {});
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function agregarAListaTemporal(e) {
+            e.preventDefault();
+            const codigo = document.getElementById('codigo').value.trim();
+            const descripcion = document.getElementById('descripcion').value.trim();
+            const categoriaReciente = document.getElementById('categoria').value;
+            const prioridadReciente = document.getElementById('prioridad').value;
+            
+            let opcional = prioridadReciente === 'Surtido' ? document.getElementById('opcional').value.trim() : document.getElementById('opcional-cliente').value.trim();
+            let tipoGancho = prioridadReciente === 'Surtido' ? document.getElementById('tipoGancho').value : 'N/A';
+            let cantidad = prioridadReciente === 'Surtido' ? document.getElementById('cantidad').value : '';
+
+            const checkboxes = document.querySelectorAll('.chk-talla');
+            const checkboxesChecked = document.querySelectorAll('.chk-talla:checked');
+            
+            let tallasTexto = 'Unica';
+            if (checkboxes.length > 0 && checkboxes.length === checkboxesChecked.length) tallasTexto = 'Todas';
+            else if (tallasSeleccionadas.length > 0) tallasTexto = tallasSeleccionadas.join(', ');
+
+            listaTemporalVendedor.push({
+                tempId: Date.now() + Math.random(),
+                vendedor: nombreVendedor,
+                codigo,
+                descripcion,
+                categoria: categoriaReciente,
+                prioridad: prioridadReciente,
+                tallas: tallasTexto,
+                tipoGancho,
+                cantidad,
+                opcional
+            });
+
+            localStorage.setItem('surty_borrador', JSON.stringify(listaTemporalVendedor));
+            actualizarUIListaTemporal();
+
+            document.getElementById('codigo').value = '';
+            document.getElementById('descripcion').value = '';
+            document.getElementById('opcional').value = '';
+            document.getElementById('opcional-cliente').value = '';
+            document.getElementById('cantidad').value = '';
+
+            document.getElementById('seccion-detalles-pedido').classList.add('hidden');
+            document.getElementById('mensaje-busqueda-codigo').classList.add('hidden');
+
+            document.querySelectorAll('.chk-talla').forEach(cb => cb.checked = false);
+            if (document.getElementById('chk-todas')) document.getElementById('chk-todas').checked = false;
+            tallasSeleccionadas = [];
+            actualizarTallas();
+            
+            document.getElementById('categoria').value = categoriaReciente;
+            document.getElementById('prioridad').value = prioridadReciente;
+            actualizarVistaPrioridad();
+            document.getElementById('codigo').focus();
+        }
+
+        function actualizarUIListaTemporal() {
+            const countModal = document.getElementById('count-lista-temporal');
+            const countBtn = document.getElementById('count-boton-enviar');
+            const btnVerModal = document.getElementById('btn-ver-lista-temporal');
+            const seccionEnviarDirecto = document.getElementById('seccion-enviar-almacen-directo');
+
+            const total = listaTemporalVendedor.length;
+
+            if (countModal) countModal.innerText = total;
+            if (countBtn) countBtn.innerText = total;
+
+            if (total > 0) {
+                btnVerModal.classList.remove('hidden');
+                seccionEnviarDirecto.classList.remove('hidden');
+            } else {
+                btnVerModal.classList.add('hidden');
+                seccionEnviarDirecto.classList.add('hidden');
+                cerrarModalListaTemporal();
+            }
+
+            renderizarContenidoModalListaTemporal();
+        }
+
+        function renderizarContenidoModalListaTemporal() {
+            const contenedor = document.getElementById('contenido-lista-temporal');
+            if (!contenedor) return;
+
+            if (listaTemporalVendedor.length === 0) {
+                contenedor.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay articulos agregados en la lista.</p>`;
+                return;
+            }
+
+            let html = '';
+            listaTemporalVendedor.forEach((item) => {
+                html += `
+                    <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border dark:border-slate-700">
+                        <div>
+                            <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">${item.codigo}</span> - 
+                            <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs">${item.descripcion}</span>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400">
+                                Tallas: <b>${item.tallas}</b> | Prio: <b>${item.prioridad}</b> ${item.prioridad === 'Surtido' && item.cantidad ? `| Cant: ${item.cantidad}` : ''}
+                            </div>
+                        </div>
+                        <button type="button" onclick="eliminarItemListaTemporal(${item.tempId})" class="text-red-500 hover:text-red-700 font-bold px-2 py-1 text-xs">&#10005;</button>
+                    </div>
+                `;
+            });
+            contenedor.innerHTML = html;
+        }
+
+        function eliminarItemListaTemporal(tempId) {
+            if (confirm("Deseas eliminar este articulo de tu lista?")) {
+                listaTemporalVendedor = listaTemporalVendedor.filter(i => i.tempId !== tempId);
+                localStorage.setItem('surty_borrador', JSON.stringify(listaTemporalVendedor));
+                actualizarUIListaTemporal();
+            }
+        }
+
+        function abrirModalListaTemporal() {
+            renderizarContenidoModalListaTemporal();
+            document.getElementById('modal-lista-temporal').classList.remove('hidden');
+        }
+
+        function cerrarModalListaTemporal() {
+            document.getElementById('modal-lista-temporal').classList.add('hidden');
+        }
+
+        function enviarListaTemporalAAlmacen() {
+            if (listaTemporalVendedor.length === 0) return;
+
+            const batch = db.batch();
+            const fechaActual = new Date().toLocaleDateString();
+            const horaActual = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const esGrupo = listaTemporalVendedor.length > 1;
+            const nuevoGrupoId = esGrupo ? 'G-' + Date.now() + '-' + Math.floor(Math.random()*1000) : null;
+
+            listaTemporalVendedor.forEach(item => {
+                const docRef = db.collection('pedidos').doc();
+                const nuevoId = docRef.id;
+                
+                batch.set(docRef, {
+                    id: nuevoId,
+                    grupoId: nuevoGrupoId,
+                    timestamp: Date.now(),
+                    fecha: fechaActual,
+                    hora: horaActual,
+                    vendedor: item.vendedor,
+                    codigo: item.codigo,
+                    descripcion: item.descripcion,
+                    categoria: item.categoria,
+                    prioridad: item.prioridad,
+                    tallas: item.tallas,
+                    tipoGancho: item.tipoGancho,
+                    cantidad: item.cantidad,
+                    opcional: item.opcional,
+                    estado: 'SOLICITADO',
+                    timestampCompletado: null
+                });
+            });
+
+            batch.commit().then(() => {
+                listaTemporalVendedor = [];
+                localStorage.removeItem('surty_borrador');
+                actualizarUIListaTemporal();
+                cerrarModalListaTemporal();
+
+                const cuerpoForm = document.getElementById('cuerpo-formulario-pedido');
+                const flechaSurtido = document.getElementById('flecha-surtido');
+                if (cuerpoForm && !cuerpoForm.classList.contains('hidden')) {
+                    cuerpoForm.classList.add('hidden');
+                    if (flechaSurtido) flechaSurtido.style.transform = 'rotate(0deg)';
+                }
+
+                abrirModalTablaPiso();
+            }).catch(error => alert("Error al enviar pedidos: " + error.message));
+        }
+
+        function abrirGestionAlmacen(idOGrupo, esGrupo = false) {
+            let items = [];
+            if (esGrupo) {
+                items = pedidos.filter(p => p.grupoId === idOGrupo);
+            } else {
+                const p = pedidos.find(item => item.id === idOGrupo);
+                if (p) items.push(p);
+            }
+
+            if (items.length === 0) return;
+
+            const primerItem = items[0];
+            let badgePrio = primerItem.prioridad === 'Cliente' ? 'bg-pink-100 text-pink-700 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700';
+            let luzVendedor = obtenerLuzEstado(primerItem.vendedor);
+
+            let htmlDetalle = `
+                <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border dark:border-slate-700 mb-3">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Vendedor</span>
+                        <span class="font-bold text-slate-800 dark:text-white">${primerItem.vendedor} ${luzVendedor}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">TIPO ENV&Iacute;O</span>
+                        <span class="px-2 py-0.5 rounded text-xs font-bold ${esGrupo ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'}">
+                            ${esGrupo ? `Lista de ${items.length} art&iacute;culos` : '1 Art&iacute;culo Individual'}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Fecha y Hora</span>
+                        <span class="text-xs text-slate-600 dark:text-slate-300">${primerItem.fecha || ''} ${primerItem.hora}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Prioridad</span>
+                        <span class="px-2 py-0.5 rounded text-xs ${badgePrio}">${primerItem.prioridad}</span>
+                    </div>
+                </div>
+            `;
+
+            items.forEach((item) => {
+                let badgeColor = 'bg-slate-100 text-slate-700';
+                let textoEstado = item.estado;
+
+                if (item.estado === 'SOLICITADO') { badgeColor = 'bg-yellow-100 text-yellow-800'; textoEstado = 'Solicitado'; }
+                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800'; textoEstado = 'Preparando...'; }
+                if (item.estado === 'EN_CAMINO') { badgeColor = 'bg-purple-100 text-purple-800'; textoEstado = 'En Camino'; }
+                if (item.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800'; textoEstado = 'No hay'; }
+                if (item.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800'; textoEstado = 'Agotado'; }
+                if (item.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800'; textoEstado = 'Listo / Recibido'; }
+
+                let botonesOpciones = '';
+
+                if (item.estado === 'COMPLETADO') {
+                    botonesOpciones = `
+                        <button type="button" onclick="eliminarPedidoDesdeAlmacen('${item.id}', '${idOGrupo}', ${esGrupo})" class="w-full sm:w-auto px-4 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-900 transition shadow ml-auto">Eliminar</button>
+                    `;
+                } else {
+                    let botonNoHay = '';
+                    if (item.prioridad === 'Cliente') {
+                        botonNoHay = `<button type="button" onclick="cambiarEstadoIndividual('${item.id}', 'NO_HAY', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-orange-500 text-white rounded text-[11px] font-semibold hover:bg-orange-600">No hay</button>`;
+                    }
+
+                    botonesOpciones = `
+                        <button type="button" onclick="cambiarEstadoIndividual('${item.id}', 'COMPLETADO', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-green-600 text-white rounded text-[11px] font-semibold hover:bg-green-700">Listo</button>
+                        <button type="button" onclick="cambiarEstadoIndividual('${item.id}', 'AGOTADO', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-red-500 text-white rounded text-[11px] font-semibold hover:bg-red-600">Agotado</button>
+                        ${botonNoHay}
+                        <button type="button" onclick="eliminarPedidoDesdeAlmacen('${item.id}', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-slate-700 text-white rounded text-[11px] font-semibold hover:bg-slate-800 ml-auto">Eliminar</button>
+                    `;
+                }
+
+                htmlDetalle += `
+                    <div class="bg-blue-50/40 dark:bg-slate-800/80 p-3.5 rounded-xl border border-blue-100 dark:border-slate-700 space-y-2 relative">
+                        <div class="flex justify-between items-center border-b pb-1.5 dark:border-slate-700">
+                            <span class="font-mono font-bold text-base text-blue-600 dark:text-blue-400">${item.codigo}</span>
+                            <span class="text-xs px-2.5 py-0.5 rounded-full font-bold ${badgeColor}">${textoEstado}</span>
+                        </div>
+                        <div class="text-xs space-y-1">
+                            <p><b class="text-slate-700 dark:text-slate-300">Descripci&oacute;n:</b> ${item.descripcion}</p>
+                            <p><b class="text-slate-700 dark:text-slate-300">Categor&iacute;a:</b> ${item.categoria} | <b class="text-slate-700 dark:text-slate-300">Tallas:</b> ${item.tallas}</p>
+                            ${item.prioridad === 'Surtido' ? `<p><b class="text-slate-700 dark:text-slate-300">Gancho:</b> ${item.tipoGancho} | <b class="text-slate-700 dark:text-slate-300">Cantidad:</b> ${item.cantidad}</p>` : ''}
+                            ${item.opcional ? `<p><b class="text-slate-700 dark:text-slate-300">Detalle:</b> ${item.opcional}</p>` : ''}
+                        </div>
+                        <div class="pt-2 border-t mt-2 flex flex-wrap items-center gap-1.5 dark:border-slate-700">
+                            ${botonesOpciones}
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('contenido-detalle-almacen').innerHTML = htmlDetalle;
+            document.getElementById('modal-gestion-almacen').classList.remove('hidden');
+        }
+
+        function cambiarEstadoIndividual(id, nuevoEstado, idOGrupo, esGrupo) {
+            let nombresEstado = {
+                'COMPLETADO': 'Listo',
+                'AGOTADO': 'Agotado',
+                'NO_HAY': 'No hay'
+            };
+            let nombreAmigable = nombresEstado[nuevoEstado] || nuevoEstado;
+
+            if (confirm(`¿Estás seguro de cambiar el estado a "${nombreAmigable}"?`)) {
+                let datos = { estado: nuevoEstado };
+                if (nuevoEstado === 'COMPLETADO') datos.timestampCompletado = Date.now();
+                
+                db.collection('pedidos').doc(id).update(datos).then(() => {
+                    const item = pedidos.find(p => p.id === id);
+                    if (item) item.estado = nuevoEstado;
+                    abrirGestionAlmacen(idOGrupo, esGrupo);
+                }).catch(err => alert("Error: " + err.message));
+            }
+        }
+
+        function eliminarPedidoDesdeAlmacen(idItem, idOGrupo, esGrupo) {
+            if (confirm("¿Estás seguro de eliminar este artículo?")) {
+                db.collection('pedidos').doc(idItem).delete().then(() => {
+                    pedidos = pedidos.filter(p => p.id !== idItem);
+                    const restantes = esGrupo ? pedidos.filter(p => p.grupoId === idOGrupo) : pedidos.filter(p => p.id === idOGrupo);
+                    if (restantes.length > 0) {
+                        abrirGestionAlmacen(idOGrupo, esGrupo);
+                    } else {
+                        cerrarGestionAlmacen();
+                    }
+                }).catch(err => alert("Error al eliminar: " + err.message));
+            }
+        }
+
+        function cerrarGestionAlmacen() {
+            document.getElementById('modal-gestion-almacen').classList.add('hidden');
+        }
+
+        function eliminarPedidoDirectoAlmacen(idOGrupo, esGrupo) {
+            if (confirm("¿Estás seguro de eliminar completamente este pedido?")) {
+                if (esGrupo) {
+                    const itemsDelGrupo = pedidos.filter(p => p.grupoId === idOGrupo);
+                    const batch = db.batch();
+                    itemsDelGrupo.forEach(item => {
+                        batch.delete(db.collection('pedidos').doc(item.id));
+                    });
+                    batch.commit().catch(err => alert("Error al eliminar grupo: " + err.message));
+                } else {
+                    db.collection('pedidos').doc(idOGrupo).delete().catch(err => alert("Error al eliminar: " + err.message));
+                }
+            }
+        }
+
+        function abrirGestionPiso(idOGrupo, esGrupo = false) {
+            let items = [];
+            if (esGrupo) {
+                items = pedidos.filter(p => p.grupoId === idOGrupo);
+            } else {
+                const p = pedidos.find(item => item.id === idOGrupo);
+                if (p) items.push(p);
+            }
+
+            if (items.length === 0) return;
+
+            const primerItem = items[0];
+            let badgePrio = primerItem.prioridad === 'Cliente' ? 'bg-pink-100 text-pink-700 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700';
+            
+            let htmlDetalle = `
+                <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border dark:border-slate-700">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Vendedor</span>
+                        <span class="font-bold text-slate-800 dark:text-white">${primerItem.vendedor}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">TIPO ENV&Iacute;O</span>
+                        <span class="px-2 py-0.5 rounded text-xs font-bold ${esGrupo ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'}">
+                            ${esGrupo ? `Lista de ${items.length} art&iacute;culos` : '1 Art&iacute;culo Individual'}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Fecha y Hora</span>
+                        <span class="text-xs text-slate-600 dark:text-slate-300">${primerItem.fecha || ''} ${primerItem.hora}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Prioridad</span>
+                        <span class="px-2 py-0.5 rounded text-xs ${badgePrio}">${primerItem.prioridad}</span>
+                    </div>
+                </div>
+            `;
+
+            items.forEach((item) => {
+                let badgeColor = 'bg-slate-100 text-slate-700';
+                let textoEstado = item.estado;
+
+                if (item.estado === 'SOLICITADO') { badgeColor = 'bg-yellow-100 text-yellow-800'; textoEstado = 'Solicitado'; }
+                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800'; textoEstado = 'Preparando...'; }
+                if (item.estado === 'EN_CAMINO') { badgeColor = 'bg-purple-100 text-purple-800'; textoEstado = 'En Camino'; }
+                if (item.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800'; textoEstado = 'No hay'; }
+                if (item.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800'; textoEstado = 'Agotado'; }
+                if (item.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800'; textoEstado = 'Listo / Recibido'; }
+
+                htmlDetalle += `
+                    <div class="bg-blue-50/50 dark:bg-slate-800/80 p-3 rounded-xl border border-blue-100 dark:border-slate-700 space-y-2 relative mt-2">
+                        <div class="flex justify-between items-center border-b pb-1 dark:border-slate-700">
+                            <span class="font-mono font-bold text-sm text-blue-600 dark:text-blue-400">${item.codigo}</span>
+                            <span class="text-xs px-2.5 py-0.5 rounded-full font-bold ${badgeColor}">${textoEstado}</span>
+                        </div>
+                        <div class="text-xs space-y-1">
+                            <p><b class="text-slate-700 dark:text-slate-300">Descripci&oacute;n:</b> ${item.descripcion}</p>
+                            <p><b class="text-slate-700 dark:text-slate-300">Categor&iacute;a:</b> ${item.categoria} | <b class="text-slate-700 dark:text-slate-300">Tallas:</b> ${item.tallas}</p>
+                            ${item.prioridad === 'Surtido' ? `<p><b class="text-slate-700 dark:text-slate-300">Gancho:</b> ${item.tipoGancho} | <b class="text-slate-700 dark:text-slate-300">Cantidad:</b> ${item.cantidad}</p>` : ''}
+                            ${item.opcional ? `<p><b class="text-slate-700 dark:text-slate-300">Detalle:</b> ${item.opcional}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            let htmlAcciones = '';
+            let algunListo = items.some(i => i.estado === 'COMPLETADO' || i.estado === 'EN_CAMINO');
+
+            if (algunListo) {
+                htmlAcciones += `
+                    <button type="button" onclick="marcarGrupoRecibidoDesdeModal('${idOGrupo}', ${esGrupo})" class="w-full bg-green-600 text-white font-semibold py-2.5 rounded-xl hover:bg-green-700 transition text-xs shadow mb-2">
+                        &#10003; Marcar Todo Recibido
+                    </button>
+                `;
+            }
+
+            if (primerItem.vendedor === nombreVendedor && items.every(i => i.estado === 'SOLICITADO' || i.estado === 'EN_PREPARACION')) {
+                htmlAcciones += `
+                    <button type="button" onclick="borrarPedidoPisoGrupo('${idOGrupo}', ${esGrupo})" class="w-full bg-red-600 text-white font-semibold py-2.5 rounded-xl hover:bg-red-700 transition text-xs shadow">&#10005; Borrar Solicitud Completa</button>
+                `;
+            } else {
+                htmlAcciones += `
+                    <button type="button" onclick="cerrarGestionPiso()" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-2.5 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition text-xs">Cerrar</button>
+                `;
+            }
+
+            document.getElementById('contenido-detalle-piso').innerHTML = htmlDetalle;
+            document.getElementById('acciones-detalle-piso').innerHTML = htmlAcciones;
+            document.getElementById('modal-gestion-piso').classList.remove('hidden');
+        }
+
+        function marcarGrupoRecibidoDesdeModal(idOGrupo, esGrupo) {
+            cerrarGestionPiso();
+            const items = esGrupo ? pedidos.filter(p => p.grupoId === idOGrupo) : pedidos.filter(p => p.id === idOGrupo);
+            const batch = db.batch();
+            items.forEach(item => {
+                batch.update(db.collection('pedidos').doc(item.id), {
+                    estado: 'COMPLETADO',
+                    timestampCompletado: Date.now()
+                });
+            });
+            batch.commit().catch(err => alert("Error: " + err.message));
+        }
+
+        function borrarPedidoPisoGrupo(idOGrupo, esGrupo) {
+            if (confirm("¿Estás seguro de eliminar esta solicitud completa?")) {
+                cerrarGestionPiso();
+                const items = esGrupo ? pedidos.filter(p => p.grupoId === idOGrupo) : pedidos.filter(p => p.id === idOGrupo);
+                const batch = db.batch();
+                items.forEach(item => {
+                    batch.delete(db.collection('pedidos').doc(item.id));
+                });
+                batch.commit().catch(err => alert("Error al eliminar: " + err.message));
+            }
+        }
+
+        function cerrarGestionPiso() {
+            document.getElementById('modal-gestion-piso').classList.add('hidden');
+        }
+
+        // ==========================================
+        // ESCUCHADOR DE PEDIDOS Y NOTIFICACIONES
+        // ==========================================
+        db.collection('pedidos')
+            .orderBy('timestamp', 'desc')
+            .limit(100)
+            .onSnapshot((snapshot) => {
+            pedidos = [];
+
+            if (primerCarga) {
+                primerCarga = false;
+            } else {
+                snapshot.docChanges().forEach((change) => {
+                    const data = change.doc.data();
+                    if (change.type === 'added' && usuarioActual === 'almacen') {
+                        reproducirSonidoYAlerta("Nuevo Pedido", `El vendedor ${data.vendedor} solicito: ${data.descripcion}`);
+                    }
+                    if (change.type === 'modified' && usuarioActual === 'piso' && data.vendedor === nombreVendedor) {
+                        if (data.estado === 'COMPLETADO') reproducirSonidoYAlerta("¡Pedido Listo!", `Almacen marco como listo: ${data.descripcion}`);
+                        else if (data.estado === 'NO_HAY') reproducirSonidoYAlerta("Artículo No Disponible", `No hay stock para: ${data.descripcion}`);
+                        else if (data.estado === 'AGOTADO') reproducirSonidoYAlerta("Artículo Agotado", `${data.descripcion} esta agotado.`);
+                    }
+                });
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+
+                pedidos.push({
+                    id: data.id || doc.id,
+                    grupoId: data.grupoId || null,
+                    timestamp: data.timestamp || Date.now(),
+                    fecha: data.fecha || '',
+                    hora: data.hora || '',
+                    vendedor: data.vendedor || 'General',
+                    codigo: data.codigo || '',
+                    descripcion: data.descripcion || '',
+                    categoria: data.categoria || 'Dama',
+                    prioridad: data.prioridad || 'Surtido',
+                    tallas: data.tallas || 'Unica',
+                    tipoGancho: data.tipoGancho || 'N/A',
+                    cantidad: data.cantidad || '',
+                    opcional: data.opcional || '',
+                    estado: data.estado || 'SOLICITADO',
+                    timestampCompletado: data.timestampCompletado || null
+                });
+            });
+            renderizarTablas();
+        });
+
+        function renderizarTablas() {
+            if (!usuarioActual) return;
+
+            const tablaPiso = document.getElementById('tabla-piso');
+            const tablaAlmacen = document.getElementById('tabla-almacen');
+            const contadorPendientes = document.getElementById('contador-pendientes');
+            const inputBusqueda = document.getElementById('busqueda-almacen');
+            const textoBusqueda = inputBusqueda ? inputBusqueda.value.toLowerCase().trim() : '';
+
+            let htmlPiso = '';
+            let htmlAlmacen = '';
+            let pendientesCount = 0;
+
+            if (pedidos.length === 0) {
+                htmlPiso = `<tr><td colspan="5" class="py-4 text-center text-slate-400">No hay solicitudes registradas</td></tr>`;
+                htmlAlmacen = `<tr><td colspan="4" class="py-4 text-center text-slate-400">No hay pedidos pendientes</td></tr>`;
+            } else {
+                const procesadosPiso = new Set();
+
+                pedidos.forEach(p => {
+                    let esGrupo = !!p.grupoId;
+                    let idClave = esGrupo ? p.grupoId : p.id;
+
+                    if (procesadosPiso.has(idClave)) return;
+                    procesadosPiso.add(idClave);
+
+                    let badgeColor = 'bg-slate-100 text-slate-700';
+                    let textoEstado = p.estado;
+
+                    if (p.estado === 'SOLICITADO') { badgeColor = 'bg-yellow-100 text-yellow-800'; textoEstado = 'Solicitado'; }
+                    if (p.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800'; textoEstado = 'No hay'; }
+                    if (p.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800'; textoEstado = 'Agotado'; }
+                    if (p.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800'; textoEstado = 'Listo'; }
+
+                    let esUrgenteCliente = p.prioridad === 'Cliente';
+                    let badgePrio = esUrgenteCliente ? 'bg-pink-100 text-pink-700 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700';
+                    let claseFilaUrgente = esUrgenteCliente ? 'border-l-4 border-pink-500 bg-pink-50/40' : '';
+
+                    if (esGrupo) {
+                        const itemsDelGrupo = pedidos.filter(item => item.grupoId === p.grupoId);
+                        let todosSolicitados = itemsDelGrupo.every(i => i.estado === 'SOLICITADO');
+                        let todosCompletados = itemsDelGrupo.every(i => i.estado === 'COMPLETADO');
+                        let textoEstadoGral = todosSolicitados ? 'Solicitado' : (todosCompletados ? 'Listo' : 'En Gesti&oacute;n');
+                        let badgeColorGral = todosSolicitados ? 'bg-yellow-100 text-yellow-800' : (todosCompletados ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800');
+
+                        htmlPiso += `
+                            <tr class="hover:bg-slate-50 cursor-pointer border-l-4 border-purple-500 bg-purple-50/20 dark:bg-purple-950/20" onclick="abrirGestionPiso('${p.grupoId}', true)">
+                                <td class="py-3 px-3 font-mono text-xs text-slate-500"><b class="text-slate-900 dark:text-white font-bold">${itemsDelGrupo.map(i=>i.codigo).join(', ')}</b><br><span class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Por: ${p.vendedor}</span><br><span class="text-[10px] text-slate-400">${p.fecha || ''} ${p.hora}</span></td>
+                                <td class="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">
+                                    <span class="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300 px-2 py-0.5 rounded-full font-bold">&#128221; Lista (${itemsDelGrupo.length} Art&iacute;culos)</span>
+                                </td>
+                                <td class="py-3 px-3 text-xs">Tallas: M&uacute;ltiples<br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span></td>
+                                <td class="py-3 px-3"><span class="text-xs px-2.5 py-1 rounded-full font-semibold ${badgeColorGral}">${textoEstadoGral}</span></td>
+                                <td class="py-3 px-3 text-right">
+                                    <span class="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-200 dark:hover:bg-slate-600">Ver Grupo</span>
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        htmlPiso += `
+                            <tr class="hover:bg-slate-50 cursor-pointer ${claseFilaUrgente}" onclick="abrirGestionPiso('${p.id}', false)">
+                                <td class="py-3 px-3 font-mono text-xs text-slate-500"><b class="text-slate-900 dark:text-white font-bold">${p.codigo}</b><br><span class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Por: ${p.vendedor}</span><br><span class="text-[10px] text-slate-400">${p.fecha || ''} ${p.hora}</span></td>
+                                <td class="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">${p.descripcion}</td>
+                                <td class="py-3 px-3 text-xs">Tallas: <b>${p.tallas}</b><br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span></td>
+                                <td class="py-3 px-3"><span class="text-xs px-2.5 py-1 rounded-full font-semibold ${badgeColor}">${textoEstado}</span></td>
+                                <td class="py-3 px-3 text-right">
+                                    <span class="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-200 dark:hover:bg-slate-600">Ver / Gestionar</span>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                const procesadosAlmacen = new Set();
+
+                pedidos.forEach(p => {
+                    if (p.estado === 'SOLICITADO') pendientesCount++;
+
+                    if (filtroAlmacenActual !== 'TODOS' && p.estado !== filtroAlmacenActual) return;
+                    if (textoBusqueda) {
+                        const coincide = p.codigo.toLowerCase().includes(textoBusqueda) || 
+                                         p.vendedor.toLowerCase().includes(textoBusqueda) || 
+                                         p.descripcion.toLowerCase().includes(textoBusqueda);
+                        if (!coincide) return;
+                    }
+
+                    let esGrupo = !!p.grupoId;
+                    let idClave = esGrupo ? p.grupoId : p.id;
+
+                    if (procesadosAlmacen.has(idClave)) return;
+                    procesadosAlmacen.add(idClave);
+
+                    let luzVendedor = obtenerLuzEstado(p.vendedor);
+
+                    if (esGrupo) {
+                        const itemsDelGrupo = pedidos.filter(item => item.grupoId === p.grupoId);
+                        let badgePrio = p.prioridad === 'Cliente' ? 'bg-pink-100 text-pink-700 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700';
+
+                        let todosSolicitados = itemsDelGrupo.every(i => i.estado === 'SOLICITADO');
+                        let todosCompletados = itemsDelGrupo.every(i => i.estado === 'COMPLETADO');
+                        let textoEstadoGral = todosSolicitados ? 'Solicitado' : (todosCompletados ? 'Listo' : 'En Gesti&oacute;n');
+                        let badgeColorGral = todosSolicitados ? 'bg-yellow-100 text-yellow-800' : (todosCompletados ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800');
+
+                        htmlAlmacen += `
+                            <tr class="hover:bg-slate-50 cursor-pointer border-l-4 border-purple-500 bg-purple-50/20 dark:bg-purple-950/20" onclick="abrirGestionAlmacen('${p.grupoId}', true)">
+                                <td class="py-3 px-3 font-mono text-xs text-slate-500"><b>${p.vendedor}</b> ${luzVendedor}<br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span><br><span class="text-[10px] text-slate-400">${p.fecha || ''} ${p.hora}</span></td>
+                                <td class="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">
+                                    <span class="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300 px-2 py-0.5 rounded-full font-bold">&#128221; Lista (${itemsDelGrupo.length} Art&iacute;culos)</span><br>
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400">${itemsDelGrupo.map(i => i.codigo).join(', ')}</span>
+                                </td>
+                                <td class="py-3 px-3"><span class="text-xs px-2.5 py-1 rounded-full font-semibold ${badgeColorGral}">${textoEstadoGral}</span></td>
+                                <td class="py-3 px-3 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <span class="text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-purple-700">Ver Grupo</span>
+                                        <button type="button" onclick="event.stopPropagation(); eliminarPedidoDirectoAlmacen('${p.grupoId}', true)" class="bg-red-500 text-white hover:bg-red-600 px-2 py-1.5 rounded-lg text-xs font-bold shadow" title="Borrar pedido">&#10005;</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        let badgeColor = 'bg-slate-100 text-slate-700';
+                        let textoEstado = p.estado;
+
+                        if (p.estado === 'SOLICITADO') { badgeColor = 'bg-yellow-100 text-yellow-800'; textoEstado = 'Solicitado'; }
+                        if (p.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800'; textoEstado = 'No hay'; }
+                        if (p.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800'; textoEstado = 'Agotado'; }
+                        if (p.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800'; textoEstado = 'Listo'; }
+
+                        let esUrgenteCliente = p.prioridad === 'Cliente';
+                        let badgePrio = esUrgenteCliente ? 'bg-pink-100 text-pink-700 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700';
+
+                        htmlAlmacen += `
+                            <tr class="hover:bg-slate-50 cursor-pointer" onclick="abrirGestionAlmacen('${p.id}', false)">
+                                <td class="py-3 px-3 font-mono text-xs text-slate-500"><b>${p.vendedor}</b> ${luzVendedor}<br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span><br><span class="text-[10px] text-slate-400">${p.fecha || ''} ${p.hora}</span></td>
+                                <td class="py-3 px-3 font-medium text-slate-800 dark:text-slate-200"><span class="text-sm font-bold text-blue-600 dark:text-blue-400">${p.codigo}</span><br><span class="text-xs text-slate-600 dark:text-slate-400">${p.descripcion}</span></td>
+                                <td class="py-3 px-3"><span class="text-xs px-2.5 py-1 rounded-full font-semibold ${badgeColor}">${textoEstado}</span></td>
+                                <td class="py-3 px-3 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <span class="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-200 dark:hover:bg-slate-600">Gestionar</span>
+                                        <button type="button" onclick="event.stopPropagation(); eliminarPedidoDirectoAlmacen('${p.id}', false)" class="bg-red-500 text-white hover:bg-red-600 px-2 py-1.5 rounded-lg text-xs font-bold shadow" title="Borrar pedido">&#10005;</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+
+            if (usuarioActual === 'piso' && tablaPiso) {
+                tablaPiso.innerHTML = htmlPiso;
+            } else if (usuarioActual === 'almacen' && tablaAlmacen) {
+                tablaAlmacen.innerHTML = htmlAlmacen || `<tr><td colspan="4" class="py-4 text-center text-slate-400">No se encontraron pedidos con este filtro</td></tr>`;
+                if (contadorPendientes) contadorPendientes.innerText = `${pendientesCount} pendientes`;
+            }
+        }
+    </script>
+</body>
+</html>
