@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Control de Tienda - SURTY</title>
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- PWA Manifest corregido para GitHub Pages -->
+    <link rel="manifest" href="manifest.json">
 
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -605,10 +605,10 @@
         </div>
     </div>
 
-    <!-- REGISTRAR SERVICE WORKER DE PWA Y FCM -->
+    <!-- REGISTRAR SERVICE WORKER DE PWA Y FCM (Ruta corregida) -->
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/pwabuilder-sw.js').catch(err => console.log('Error PWA SW:', err));
+        navigator.serviceWorker.register('pwabuilder-sw.js').catch(err => console.log('Error PWA SW:', err));
       }
     </script>
 
@@ -641,7 +641,7 @@
                 if ('Notification' in window) {
                     Notification.requestPermission().then((permission) => {
                         if (permission === 'granted') {
-                            navigator.serviceWorker.register('/firebase-messaging-sw.js').then((registration) => {
+                            navigator.serviceWorker.register('pwabuilder-sw.js').then((registration) => {
                                 messaging.getToken({ 
                                     serviceWorkerRegistration: registration,
                                     vapidKey: '' 
