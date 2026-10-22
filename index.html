@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Control de Tienda - SURTY</title>
     
-    <!-- PWA Manifest corregido para GitHub Pages -->
+    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
 
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- SDKs de Firebase para Firestore y Messaging -->
+    <!-- SDKs de Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
     
-    <!-- Libreria Html5-Qrcode para el lector de barras -->
+    <!-- Libreria Html5-Qrcode -->
     <script src="https://unpkg.com/html5-qrcode"></script>
 
     <style>
@@ -34,9 +34,19 @@
             }
         }
 
+        /* ESTILOS MODO CLARO (Default) */
         body {
-            background-color: #F1F5F9;
-            color: #0F172A;
+            background-color: #F1F5F9 !important;
+            color: #0F172A !important;
+        }
+        .card-box {
+            background-color: #FFFFFF !important;
+            color: #0F172A !important;
+            border-color: #E2E8F0 !important;
+        }
+        .subcard-box {
+            background-color: #F8FAFC !important;
+            border-color: #CBD5E1 !important;
         }
         input, select, textarea {
             background-color: #FFFFFF !important;
@@ -44,37 +54,31 @@
             border-color: #CBD5E1 !important;
         }
         input:disabled, select:disabled, input[readonly], select[readonly] {
-            background-color: #E2E8F0 !important;
-            color: #1E293B !important;
-            -webkit-text-fill-color: #1E293B !important;
+            background-color: #F1F5F9 !important;
+            color: #334155 !important;
+            -webkit-text-fill-color: #334155 !important;
             opacity: 1 !important;
         }
-        input::placeholder {
-            color: #64748B !important;
+        label, .text-muted {
+            color: #475569 !important;
+        }
+        .text-title {
+            color: #0F172A !important;
         }
 
+        /* ESTILOS MODO OSCURO (Opcional) */
         body.dark-mode {
             background-color: #0B1329 !important;
             color: #F8FAFC !important;
         }
-        body.dark-mode .bg-white {
+        body.dark-mode .card-box {
             background-color: #151D36 !important;
             color: #F8FAFC !important;
             border-color: #334155 !important;
         }
-        body.dark-mode .text-slate-800, 
-        body.dark-mode .text-slate-700,
-        body.dark-mode .text-slate-900,
-        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4 {
-            color: #FFFFFF !important;
-        }
-        body.dark-mode .text-slate-600, 
-        body.dark-mode .text-slate-500,
-        body.dark-mode label {
-            color: #CBD5E1 !important;
-        }
-        body.dark-mode .text-slate-400 {
-            color: #94A3B8 !important;
+        body.dark-mode .subcard-box {
+            background-color: #1E293B !important;
+            border-color: #334155 !important;
         }
         body.dark-mode input, 
         body.dark-mode select, 
@@ -88,25 +92,14 @@
         body.dark-mode input[readonly], 
         body.dark-mode select[readonly] {
             background-color: #0F172A !important;
-            color: #F8FAFC !important;
-            -webkit-text-fill-color: #F8FAFC !important;
+            color: #CBD5E1 !important;
+            -webkit-text-fill-color: #CBD5E1 !important;
         }
-        body.dark-mode input::placeholder {
-            color: #64748B !important;
+        body.dark-mode label, body.dark-mode .text-muted {
+            color: #CBD5E1 !important;
         }
-        body.dark-mode .bg-slate-50 {
-            background-color: #1A233D !important;
-            border-color: #334155 !important;
-        }
-        body.dark-mode .bg-slate-100 {
-            background-color: #1E293B !important;
-            color: #F8FAFC !important;
-        }
-        body.dark-mode .divide-y > * {
-            border-color: #334155 !important;
-        }
-        body.dark-mode tr.hover\:bg-slate-50:hover {
-            background-color: #1E293B !important;
+        body.dark-mode .text-title {
+            color: #FFFFFF !important;
         }
 
         #reader video {
@@ -124,7 +117,7 @@
         }
     </style>
 </head>
-<body class="bg-[#0B1329] text-slate-100 min-h-screen p-4 md:p-8 transition-colors duration-200 dark-mode">
+<body class="min-h-screen p-4 md:p-8 transition-colors duration-200">
 
     <!-- NOTIFICACION FLOTANTE -->
     <div id="notificacion-flotante" class="fixed top-4 right-4 z-50 hidden bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all">
@@ -138,22 +131,22 @@
 
     <!-- MENÚ LATERAL (DRAWER) -->
     <div id="menu-lateral" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden transition-opacity">
-        <div class="absolute inset-y-0 left-0 max-w-xs w-full bg-[#151D36] p-6 shadow-2xl flex flex-col justify-between border-r border-slate-700">
+        <div class="absolute inset-y-0 left-0 max-w-xs w-full card-box p-6 shadow-2xl flex flex-col justify-between border-r">
             <div>
-                <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
+                <div class="flex justify-between items-center mb-8 border-b pb-4">
                     <div class="flex items-center gap-2">
                         <span class="text-blue-500 font-bold text-xl">&#128295;</span>
-                        <h2 class="font-bold text-white text-base tracking-wider" id="titulo-menu-lateral">PISO DE VENTA</h2>
+                        <h2 class="font-bold text-title text-base tracking-wider" id="titulo-menu-lateral">PISO DE VENTA</h2>
                     </div>
-                    <button type="button" onclick="cerrarMenuLateral()" class="text-slate-400 hover:text-white text-xl font-bold p-1">&#10005;</button>
+                    <button type="button" onclick="cerrarMenuLateral()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1">&#10005;</button>
                 </div>
                 <div class="space-y-3" id="opciones-menu-lateral"></div>
             </div>
-            <div class="border-t border-slate-700 pt-4 space-y-3">
-                <button type="button" onclick="toggleDarkMode()" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
-                    &#127769; Modo Claro / Oscuro
+            <div class="border-t pt-4 space-y-3">
+                <button type="button" onclick="toggleDarkMode()" class="w-full text-left subcard-box p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border">
+                    &#127769; Alternar Modo Claro / Oscuro
                 </button>
-                <button type="button" onclick="cerrarSesion(); cerrarMenuLateral();" class="w-full text-center bg-red-950/50 hover:bg-red-900/60 text-red-400 border border-red-900/50 p-3.5 rounded-xl font-semibold transition flex items-center justify-center gap-2">
+                <button type="button" onclick="cerrarSesion(); cerrarMenuLateral();" class="w-full text-center bg-red-100 dark:bg-red-950/50 hover:bg-red-200 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-900/50 p-3.5 rounded-xl font-semibold transition flex items-center justify-center gap-2">
                     &#128682; Cerrar Sesión
                 </button>
             </div>
@@ -161,35 +154,35 @@
     </div>
 
     <!-- PANTALLA DE LOGIN -->
-    <div id="pantalla-login" class="max-w-md mx-auto mt-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-700">
+    <div id="pantalla-login" class="max-w-md mx-auto mt-8 card-box p-8 rounded-2xl shadow-xl border">
         <div class="text-center mb-6">
             <div class="w-36 mx-auto mb-2">
                 <svg viewBox="0 0 500 450" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto drop-shadow-md">
                     <path d="M 100 310 C 100 380 230 380 230 310 L 230 180 C 230 110 150 110 150 160 C 150 200 230 200 230 240 L 230 310" stroke="#1d4ed8" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M 230 230 L 330 110" stroke="#1d4ed8" stroke-width="42" stroke-linecap="round"/>
-                    <text x="250" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="52" fill="#38bdf8" letter-spacing="12">SURTY</text>
+                    <text x="250" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="52" fill="#0284c7" letter-spacing="12">SURTY</text>
                 </svg>
             </div>
-            <p class="text-sm text-slate-400">Selecciona tu modo de acceso</p>
+            <p class="text-sm text-muted">Selecciona tu modo de acceso</p>
         </div>
 
-        <div class="flex bg-slate-800/80 p-1 rounded-xl mb-6 border border-slate-700">
+        <div class="flex subcard-box p-1 rounded-xl mb-6 border">
             <button type="button" onclick="cambiarTabLogin('piso')" id="tab-login-piso" class="flex-1 py-2 text-sm font-semibold rounded-lg transition bg-blue-600 text-white shadow">Piso de Venta</button>
-            <button type="button" onclick="cambiarTabLogin('almacen')" id="tab-login-almacen" class="flex-1 py-2 text-sm font-semibold rounded-lg transition text-slate-400">Almacen (Admin)</button>
+            <button type="button" onclick="cambiarTabLogin('almacen')" id="tab-login-almacen" class="flex-1 py-2 text-sm font-semibold rounded-lg transition text-muted">Almacen (Admin)</button>
         </div>
 
-        <div id="mensaje-error" class="hidden mb-4 p-3 bg-red-950/80 border border-red-800 text-red-300 text-xs rounded-lg font-medium text-center"></div>
+        <div id="mensaje-error" class="hidden mb-4 p-3 bg-red-100 dark:bg-red-950/80 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-300 text-xs rounded-lg font-medium text-center"></div>
 
         <form id="form-login-piso" onsubmit="loginPiso(event)" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Usuario del Vendedor</label>
+                <label class="block text-sm font-medium mb-1">Usuario del Vendedor</label>
                 <input type="text" id="usuario-vendedor" required placeholder="Ej. julio" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
             </div>
             <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Contraseña</label>
+                <label class="block text-sm font-medium mb-1">Contraseña</label>
                 <div class="relative">
                     <input type="password" id="password-vendedor" required placeholder="••••••••" class="w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <button type="button" onclick="togglePassword('password-vendedor', 'icon-eye-vendedor')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 focus:outline-none">
+                    <button type="button" onclick="togglePassword('password-vendedor', 'icon-eye-vendedor')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
                         <span id="icon-eye-vendedor" class="text-base">&#128065;</span>
                     </button>
                 </div>
@@ -199,23 +192,23 @@
 
         <form id="form-login-almacen" onsubmit="entrarAlmacenDirecto(event)" class="space-y-4 hidden">
             <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Contraseña de Administrador (Almacén)</label>
+                <label class="block text-sm font-medium mb-1">Contraseña de Administrador (Almacén)</label>
                 <div class="relative">
-                    <input type="password" id="password-almacen" required placeholder="••••••••" class="w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-slate-700 focus:outline-none">
-                    <button type="button" onclick="togglePassword('password-almacen', 'icon-eye-almacen')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 focus:outline-none">
+                    <input type="password" id="password-almacen" required placeholder="••••••••" class="w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <button type="button" onclick="togglePassword('password-almacen', 'icon-eye-almacen')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
                         <span id="icon-eye-almacen" class="text-base">&#128065;</span>
                     </button>
                 </div>
             </div>
-            <button type="submit" class="w-full bg-slate-800 text-white py-2.5 rounded-lg font-medium hover:bg-slate-900 transition shadow border border-slate-700">Entrar a Almacen</button>
+            <button type="submit" class="w-full bg-slate-800 text-white py-2.5 rounded-lg font-medium hover:bg-slate-900 transition shadow">Entrar a Almacen</button>
         </form>
     </div>
 
     <!-- APLICACION PRINCIPAL -->
     <div id="app-principal" class="max-w-3xl mx-auto hidden">
-        <header class="bg-white shadow rounded-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4 border border-slate-700">
+        <header class="card-box shadow rounded-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4 border">
             <div class="flex items-center gap-3">
-                <button type="button" onclick="abrirMenuLateral()" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-white transition shadow flex items-center justify-center font-bold text-lg" title="Abrir Menú">
+                <button type="button" onclick="abrirMenuLateral()" class="p-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-white transition shadow flex items-center justify-center font-bold text-lg" title="Abrir Menú">
                     &#9776;
                 </button>
                 <div class="w-12">
@@ -225,53 +218,53 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-800" id="titulo-panel">Control de Tienda - SURTY</h1>
-                    <p class="text-sm text-slate-400" id="info-usuario">Sesion activa</p>
+                    <h1 class="text-2xl font-bold text-title" id="titulo-panel">Control de Tienda - SURTY</h1>
+                    <p class="text-sm text-muted" id="info-usuario">Sesion activa</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
-                <button type="button" onclick="toggleDarkMode()" class="bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1 shadow-sm" title="Cambiar Modo Claro/Oscuro">&#127769; Modo</button>
-                <button type="button" onclick="cerrarSesion()" class="bg-red-950/40 text-red-400 hover:bg-red-900/60 px-4 py-2 rounded-lg text-sm font-semibold transition border border-red-900/40">Cerrar Sesion</button>
+                <button type="button" onclick="toggleDarkMode()" class="subcard-box px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1 shadow-sm border" title="Cambiar Modo Claro/Oscuro">&#127769; Modo</button>
+                <button type="button" onclick="cerrarSesion()" class="bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-200 px-4 py-2 rounded-lg text-sm font-semibold transition border border-red-200 dark:border-red-900/40">Cerrar Sesion</button>
             </div>
         </header>
 
         <!-- VISTA: PISO DE VENTA -->
         <div id="vista-piso" class="hidden">
-            <div class="bg-white rounded-xl shadow relative border border-slate-700">
-                <div onclick="toggleFormularioPedido()" class="p-4 bg-slate-50 border-b border-slate-700 flex justify-between items-center cursor-pointer hover:bg-slate-800/50 transition rounded-t-xl">
-                    <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+            <div class="card-box rounded-xl shadow relative border">
+                <div onclick="toggleFormularioPedido()" class="p-4 subcard-box border-b flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition rounded-t-xl">
+                    <h2 class="text-lg font-bold text-title flex items-center gap-2">
                         &#128722; Solicitar Mercancia
-                        <span id="flecha-surtido" class="text-xs text-slate-400 transition-transform duration-200">&#9660;</span>
+                        <span id="flecha-surtido" class="text-xs text-muted transition-transform duration-200">&#9660;</span>
                     </h2>
-                    <button type="button" onclick="event.stopPropagation(); abrirModalListaTemporal();" id="btn-ver-lista-temporal" class="bg-amber-950/60 text-amber-300 font-bold px-2.5 py-1 rounded-lg text-xs hover:bg-amber-900/80 transition shadow-sm border border-amber-800/50 hidden">
+                    <button type="button" onclick="event.stopPropagation(); abrirModalListaTemporal();" id="btn-ver-lista-temporal" class="bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold px-2.5 py-1 rounded-lg text-xs hover:bg-amber-500/30 transition shadow-sm border border-amber-500/40 hidden">
                         &#128221; Lista (<span id="count-lista-temporal">0</span>)
                     </button>
                 </div>
                 
                 <div id="cuerpo-formulario-pedido" class="p-6 hidden">
-                    <form id="form-pedido" onsubmit="agregarAListaTemporal(event)" class="space-y-3">
-                        <div class="grid grid-cols-2 gap-2 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
+                    <form id="form-pedido" onsubmit="agregarAListaTemporal(event)" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-2 subcard-box p-3 rounded-xl border">
                             <div>
-                                <label class="block text-[10px] uppercase font-bold text-slate-400">Vendedor</label>
-                                <span id="display-vendedor" class="text-sm font-bold text-white">-</span>
+                                <label class="block text-[10px] uppercase font-bold text-muted">Vendedor</label>
+                                <span id="display-vendedor" class="text-sm font-bold text-title">-</span>
                             </div>
                             <div>
-                                <label class="block text-[10px] uppercase font-bold text-slate-400">Tipo / Prioridad</label>
-                                <span id="display-prioridad" class="text-sm font-bold text-blue-400">Surtido</span>
+                                <label class="block text-[10px] uppercase font-bold text-muted">Tipo / Prioridad</label>
+                                <span id="display-prioridad" class="text-sm font-bold text-blue-600 dark:text-blue-400">Surtido</span>
                                 <input type="hidden" id="prioridad" value="Surtido">
                             </div>
                         </div>
 
                         <div class="relative">
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Codigo del Articulo</label>
-                            <div id="sugerencias-codigo" class="absolute z-50 left-0 right-0 bottom-full mb-1 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl scroll-desplegable hidden divide-y divide-slate-700"></div>
+                            <label class="block text-xs font-medium text-muted mb-1">Codigo del Articulo</label>
+                            <div id="sugerencias-codigo" class="absolute z-50 left-0 right-0 bottom-full mb-1 card-box border rounded-lg shadow-2xl scroll-desplegable hidden divide-y"></div>
 
                             <div class="flex gap-2">
                                 <input type="text" id="codigo" required autocomplete="off" placeholder="Ej. A-102" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <button type="button" onclick="buscarReferenciaCatalogo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition flex items-center justify-center shadow" title="Buscar referencia">
+                                <button type="button" onclick="buscarReferenciaCatalogo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-lg transition flex items-center justify-center shadow" title="Buscar referencia">
                                     🔍
                                 </button>
-                                <button type="button" onclick="abrirScanner()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-lg transition flex items-center justify-center shadow border border-slate-700" title="Escanear con cámara">
+                                <button type="button" onclick="abrirScanner()" class="bg-slate-800 hover:bg-slate-900 text-white px-3.5 py-2 rounded-lg transition flex items-center justify-center shadow" title="Escanear con cámara">
                                     📷
                                 </button>
                             </div>
@@ -279,14 +272,14 @@
 
                         <div id="mensaje-busqueda-codigo" class="hidden text-xs"></div>
 
-                        <div id="seccion-detalles-pedido" class="space-y-3 hidden">
+                        <div id="seccion-detalles-pedido" class="space-y-4 hidden">
                             <div class="grid grid-cols-3 gap-2">
                                 <div class="col-span-2">
-                                    <label class="block text-xs font-medium text-slate-300 mb-1">Descripcion</label>
+                                    <label class="block text-xs font-medium text-muted mb-1">Descripcion</label>
                                     <input type="text" id="descripcion" readonly placeholder="Descripción del artículo" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none font-semibold">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-300 mb-1">Categoria</label>
+                                    <label class="block text-xs font-medium text-muted mb-1">Categoria</label>
                                     <select id="categoria" disabled class="w-full px-2 py-2 border rounded-lg text-sm focus:outline-none font-semibold">
                                         <option value="Dama">Dama</option>
                                         <option value="Caballero">Caballero</option>
@@ -298,19 +291,19 @@
                             </div>
                             
                             <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Tallas</label>
-                                <button type="button" onclick="toggleModalTallas()" class="w-full bg-slate-800 border border-slate-700 text-slate-200 py-2 px-3 rounded-lg text-xs font-semibold text-left flex justify-between items-center hover:bg-slate-700">
+                                <label class="block text-xs font-medium text-muted mb-1">Tallas</label>
+                                <button type="button" onclick="toggleModalTallas()" class="w-full subcard-box border text-title py-2 px-3 rounded-lg text-xs font-semibold text-left flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700">
                                     <span id="texto-boton-tallas">Elegir Tallas...</span>
                                     <span>&#9660;</span>
                                 </button>
-                                <div id="contenedor-tallas-seleccionadas" class="flex flex-wrap gap-1 p-1.5 mt-1 bg-slate-800 border border-slate-700 rounded-lg min-h-[34px] items-center">
-                                    <span class="text-[10px] text-slate-400 italic">Ninguna</span>
+                                <div id="contenedor-tallas-seleccionadas" class="flex flex-wrap gap-1 p-2 mt-1 subcard-box border rounded-lg min-h-[38px] items-center">
+                                    <span class="text-[10px] text-muted italic">Ninguna</span>
                                 </div>
                             </div>
 
                             <div id="seccion-surtido" class="grid grid-cols-3 gap-2">
                                 <div>
-                                    <label class="block text-[11px] font-medium text-slate-300 mb-1">Tipo Gancho</label>
+                                    <label class="block text-[11px] font-medium text-muted mb-1">Tipo Gancho</label>
                                     <select id="tipoGancho" class="w-full px-2 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                         <option value="Ninguno">Ninguno</option>
                                         <option value="Nuevo">Nuevo</option>
@@ -321,28 +314,28 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-medium text-slate-300 mb-1">Cantidad</label>
+                                    <label class="block text-[11px] font-medium text-muted mb-1">Cantidad</label>
                                     <input type="number" id="cantidad" min="0" placeholder="" class="w-full px-2 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 </div>
                                 <div id="contenedor-detalle-surtido">
-                                    <label class="block text-[11px] font-medium text-slate-300 mb-1">Detalle</label>
+                                    <label class="block text-[11px] font-medium text-muted mb-1">Detalle</label>
                                     <input type="text" id="opcional" placeholder="Ej. Azul..." class="w-full px-2 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 </div>
                             </div>
 
                             <div id="contenedor-detalle-cliente" class="hidden">
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Detalle</label>
+                                <label class="block text-xs font-medium text-muted mb-1">Detalle</label>
                                 <input type="text" id="opcional-cliente" placeholder="Ej. Color azul o detalles..." class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             </div>
 
-                            <button type="submit" class="w-full bg-slate-800 text-white py-2.5 rounded-lg font-bold hover:bg-slate-900 transition text-sm shadow border border-slate-700">
+                            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm shadow">
                                 + A&ntilde;adir a Lista
                             </button>
                         </div>
                     </form>
 
-                    <div id="seccion-enviar-almacen-directo" class="mt-3 hidden">
-                        <button type="button" onclick="enviarListaTemporalAAlmacen()" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 transition text-sm shadow animate-pulse">
+                    <div id="seccion-enviar-almacen-directo" class="mt-4 hidden">
+                        <button type="button" onclick="enviarListaTemporalAAlmacen()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition text-sm shadow animate-pulse">
                             Enviar a Almacen (<span id="count-boton-enviar">0</span>)
                         </button>
                     </div>
@@ -351,81 +344,111 @@
         </div>
 
         <!-- VISTA: ALMACEN (Admin) -->
-        <div id="vista-almacen" class="bg-white p-6 rounded-xl shadow hidden border border-slate-700">
+        <div id="vista-almacen" class="card-box p-6 rounded-xl shadow hidden border">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-200">&#128230; Panel de Almacen (Gestion General)</h2>
-                    <p class="text-xs text-slate-400">Administra pedidos, catálogo de referencias y accesos.</p>
+                    <h2 class="text-lg font-bold text-title">&#128230; Panel de Almacen (Gestion General)</h2>
+                    <p class="text-xs text-muted">Administra pedidos, catálogo de referencias y accesos.</p>
                 </div>
-                <span id="contador-pendientes" class="bg-amber-950/60 text-amber-300 border border-amber-800/50 text-xs font-semibold px-3 py-1.5 rounded-full">0 pendientes</span>
+                <span id="contador-pendientes" class="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/50 text-xs font-semibold px-3 py-1.5 rounded-full">0 pendientes</span>
             </div>
 
             <!-- SECCIÓN: PEDIDOS -->
             <div id="seccion-almacen-pedidos">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-3 mb-4 bg-slate-800/60 p-3 rounded-xl border border-slate-700">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-3 mb-4 subcard-box p-3 rounded-xl border">
                     <div class="flex gap-2 flex-wrap w-full md:w-auto">
-                        <button type="button" onclick="filtrarAlmacen('TODOS')" id="btn-filtro-todos" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white shadow border border-slate-700">Todos</button>
-                        <button type="button" onclick="filtrarAlmacen('SOLICITADO')" id="btn-filtro-solicitado" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">Pendientes</button>
-                        <button type="button" onclick="filtrarAlmacen('EN_PREPARACION')" id="btn-filtro-preparacion" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">En Preparacion</button>
+                        <button type="button" onclick="filtrarAlmacen('TODOS')" id="btn-filtro-todos" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow">Todos</button>
+                        <button type="button" onclick="filtrarAlmacen('SOLICITADO')" id="btn-filtro-solicitado" class="px-3 py-1.5 rounded-lg text-xs font-bold subcard-box border text-muted hover:bg-slate-200 dark:hover:bg-slate-700">Pendientes</button>
+                        <button type="button" onclick="filtrarAlmacen('EN_PREPARACION')" id="btn-filtro-preparacion" class="px-3 py-1.5 rounded-lg text-xs font-bold subcard-box border text-muted hover:bg-slate-200 dark:hover:bg-slate-700">En Preparacion</button>
                     </div>
                     <div class="w-full md:w-72">
-                        <input type="text" id="busqueda-almacen" oninput="renderizarTablas()" placeholder="  Buscar codigo, vendedor o descripcion..." class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <input type="text" id="busqueda-almacen" oninput="renderizarTablas()" placeholder="Buscar codigo, vendedor o descripcion..." class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-700 text-xs uppercase text-slate-400 font-semibold">
+                            <tr class="border-b text-xs uppercase text-muted font-semibold">
                                 <th class="py-3 px-3">Vendedor / Prio</th>
                                 <th class="py-3 px-3">Codigo / Tipo</th>
                                 <th class="py-3 px-3">Estado General</th>
                                 <th class="py-3 px-3 text-right">Accion</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-almacen" class="text-sm divide-y divide-slate-700">
+                        <tbody id="tabla-almacen" class="text-sm divide-y">
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- SECCIÓN: CATÁLOGO -->
-            <div id="seccion-almacen-catalogo" class="hidden space-y-4">
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-                    <h3 class="font-bold text-slate-200 text-sm mb-3">&#128218; Registrar / Escanear Referencia en el Catálogo</h3>
+            <!-- SECCIÓN: CATÁLOGO COMPACTO Y FILTROS RÁPIDOS -->
+            <div id="seccion-almacen-catalogo" class="hidden space-y-3">
+                
+                <!-- Botón Toggle de Registro de Referencia -->
+                <div class="flex justify-between items-center">
+                    <button type="button" onclick="toggleFormularioCatalogo()" id="btn-toggle-registro" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow flex items-center justify-between">
+                        <span id="texto-btn-toggle">+ Agregar Nueva Referencia al Catálogo</span>
+                        <span id="icono-btn-toggle" class="text-base">&#9660;</span>
+                    </button>
+                </div>
+
+                <!-- Formulario Plegable -->
+                <div id="formulario-registro-catalogo" class="hidden subcard-box p-4 rounded-xl border shadow-inner transition-all duration-300">
+                    <h3 class="font-bold text-title text-xs uppercase mb-3 flex items-center gap-1.5">
+                        <span>&#128218;</span> Registrar Nueva Referencia
+                    </h3>
                     <form onsubmit="guardarEnCatalogo(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div class="flex gap-2">
-                            <input type="text" id="cat-codigo" required placeholder="Código o barra" class="w-full px-3 py-2 border rounded-lg text-xs">
-                            <button type="button" onclick="abrirScannerCatalogo()" class="bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-slate-900 transition text-xs shadow border border-slate-700" title="Escanear referencia">&#128247;</button>
+                            <input type="text" id="cat-codigo" required placeholder="Código o barra" class="w-full px-3 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button type="button" onclick="abrirScannerCatalogo()" class="bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-slate-900 transition text-xs shadow flex items-center justify-center" title="Escanear referencia">&#128247;</button>
                         </div>
-                        <input type="text" id="cat-descripcion" required placeholder="Descripción completa del artículo" class="px-3 py-2 border rounded-lg text-xs md:col-span-1">
-                        <select id="cat-categoria" class="px-2 py-2 border rounded-lg text-xs">
+                        <input type="text" id="cat-descripcion" required placeholder="Descripción completa del artículo" class="px-3 py-2 border rounded-lg text-xs md:col-span-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <select id="cat-categoria" class="px-2 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <option value="Dama">Dama</option>
                             <option value="Caballero">Caballero</option>
                             <option value="Ni&ntilde;o">Ni&ntilde;o</option>
                             <option value="Hogar">Hogar</option>
                             <option value="Intimo">Intimo</option>
                         </select>
-                        <button type="submit" class="bg-blue-600 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-blue-700 transition shadow">Guardar en Catálogo</button>
+                        <button type="submit" class="bg-green-600 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-green-700 transition shadow">Guardar Referencia</button>
                     </form>
                 </div>
 
-                <div class="flex justify-between items-center">
-                    <h4 class="font-bold text-xs text-slate-400 uppercase">Referencias Registradas en el Sistema</h4>
-                    <input type="text" id="busqueda-catalogo" oninput="renderizarTablaCatalogo()" placeholder="Buscar en catálogo..." class="px-3 py-1 border rounded-lg text-xs w-60">
+                <!-- Buscador Fijo (Sticky) con Filtros de Categoría -->
+                <div id="contenedor-busqueda-catalogo" class="sticky top-0 z-20 card-box p-2.5 rounded-xl shadow-md border space-y-2">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-[11px] text-muted uppercase">Referencias Registradas</h4>
+                    </div>
+                    <div class="flex gap-2 w-full">
+                        <input type="text" id="busqueda-catalogo" onfocus="scrollEnfoqueBuscador()" oninput="renderizarTablaCatalogo()" placeholder="Escribe para buscar código o descripción..." class="px-3 py-2 border rounded-lg text-xs w-full focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm">
+                        <button type="button" onclick="abrirScannerBusquedaCatalogo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-lg transition flex items-center justify-center shadow text-xs font-bold" title="Escanear para buscar">
+                            📷
+                        </button>
+                    </div>
+                    <!-- Botones de Filtro Rápido por Categoría -->
+                    <div class="flex gap-1 overflow-x-auto pb-1 text-[11px]">
+                        <button type="button" onclick="filtrarCategoriaCatalogo('TODOS')" id="cat-pill-todos" class="px-2.5 py-1 rounded-full font-bold bg-blue-600 text-white whitespace-nowrap shadow-sm">Todos</button>
+                        <button type="button" onclick="filtrarCategoriaCatalogo('Dama')" id="cat-pill-dama" class="px-2.5 py-1 rounded-full font-semibold subcard-box border text-title whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700">Dama</button>
+                        <button type="button" onclick="filtrarCategoriaCatalogo('Caballero')" id="cat-pill-caballero" class="px-2.5 py-1 rounded-full font-semibold subcard-box border text-title whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700">Caballero</button>
+                        <button type="button" onclick="filtrarCategoriaCatalogo('Niño')" id="cat-pill-nino" class="px-2.5 py-1 rounded-full font-semibold subcard-box border text-title whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700">Niño</button>
+                        <button type="button" onclick="filtrarCategoriaCatalogo('Hogar')" id="cat-pill-hogar" class="px-2.5 py-1 rounded-full font-semibold subcard-box border text-title whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700">Hogar</button>
+                        <button type="button" onclick="filtrarCategoriaCatalogo('Intimo')" id="cat-pill-intimo" class="px-2.5 py-1 rounded-full font-semibold subcard-box border text-title whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700">Íntimo</button>
+                    </div>
                 </div>
 
-                <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <!-- Tabla Ampliada con Alto Máximo Flexible -->
+                <div class="overflow-x-auto max-h-[60vh] overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-700 text-xs uppercase text-slate-400 font-semibold sticky top-0 bg-slate-900">
-                                <th class="py-3 px-3">Código</th>
-                                <th class="py-3 px-3">Descripción</th>
-                                <th class="py-3 px-3">Categoría</th>
-                                <th class="py-3 px-3 text-right">Acción</th>
+                            <tr class="border-b text-xs uppercase text-muted font-semibold sticky top-0 subcard-box shadow-sm z-10">
+                                <th class="py-2.5 px-3">Código</th>
+                                <th class="py-2.5 px-3">Descripción</th>
+                                <th class="py-2.5 px-3">Cat.</th>
+                                <th class="py-2.5 px-3 text-right">Acción</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-catalogo" class="text-sm divide-y divide-slate-700">
+                        <tbody id="tabla-catalogo" class="text-xs md:text-sm divide-y">
                         </tbody>
                     </table>
                 </div>
@@ -433,8 +456,8 @@
 
             <!-- SECCIÓN: VENDEDORES -->
             <div id="seccion-almacen-vendedores" class="hidden space-y-4">
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-                    <h3 class="font-bold text-slate-200 text-sm mb-3">&#128100; Registrar Nuevo Vendedor</h3>
+                <div class="subcard-box p-4 rounded-xl border">
+                    <h3 class="font-bold text-title text-sm mb-3">&#128100; Registrar Nuevo Vendedor</h3>
                     <form onsubmit="crearVendedor(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <input type="text" id="nuevo-nombre" required placeholder="Nombre completo (ej. Maria Perez)" class="px-3 py-2 border rounded-lg text-xs">
                         <input type="text" id="nuevo-usuario" required placeholder="Usuario para login (ej. maria)" class="px-3 py-2 border rounded-lg text-xs">
@@ -446,14 +469,14 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-700 text-xs uppercase text-slate-400 font-semibold">
+                            <tr class="border-b text-xs uppercase text-muted font-semibold">
                                 <th class="py-3 px-3">Nombre</th>
                                 <th class="py-3 px-3">Usuario de Acceso</th>
                                 <th class="py-3 px-3">Estado en App</th>
                                 <th class="py-3 px-3 text-right">Accion</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-vendedores" class="text-sm divide-y divide-slate-700">
+                        <tbody id="tabla-vendedores" class="text-sm divide-y">
                         </tbody>
                     </table>
                 </div>
@@ -463,26 +486,26 @@
 
     <!-- MODALES Y ALERTAS -->
     <div id="modal-alerta" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 text-center border border-slate-700">
-            <div class="w-12 h-12 bg-amber-950/60 text-amber-400 border border-amber-800/50 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">⚠️</div>
-            <h3 id="titulo-modal-alerta" class="font-bold text-white text-lg">Aviso</h3>
-            <p id="texto-modal-alerta" class="text-xs text-slate-300">Mensaje de alerta.</p>
+        <div class="card-box rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 text-center border">
+            <div class="w-12 h-12 bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-300 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">⚠️</div>
+            <h3 id="titulo-modal-alerta" class="font-bold text-title text-lg">Aviso</h3>
+            <p id="texto-modal-alerta" class="text-xs text-muted">Mensaje de alerta.</p>
             <button type="button" onclick="cerrarModalAlerta()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700 transition text-sm shadow">Entendido</button>
         </div>
     </div>
 
     <!-- MODAL TABLA ESTADO DE SOLICITUDES EN TIENDA -->
     <div id="modal-tabla-piso" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border border-slate-700">
-            <div class="flex justify-between items-center border-b pb-3 border-slate-700">
-                <h2 class="text-lg font-bold text-white flex items-center gap-2">&#128221; Estado de Solicitudes en Tienda</h2>
-                <button type="button" onclick="cerrarModalTablaPiso()" class="text-slate-400 hover:text-white font-bold text-lg">&#10005;</button>
+        <div class="card-box rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h2 class="text-lg font-bold text-title flex items-center gap-2">&#128221; Estado de Solicitudes en Tienda</h2>
+                <button type="button" onclick="cerrarModalTablaPiso()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
             </div>
-            <p class="text-xs text-slate-400">Toca cualquier fila para ver detalles o gestionar</p>
+            <p class="text-xs text-muted">Toca cualquier fila para ver detalles o gestionar</p>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-700 text-xs uppercase text-slate-400 font-semibold">
+                        <tr class="border-b text-xs uppercase text-muted font-semibold">
                             <th class="py-3 px-3">Codigo / Vendedor</th>
                             <th class="py-3 px-3">Descripcion</th>
                             <th class="py-3 px-3">Tallas / Prio.</th>
@@ -490,7 +513,7 @@
                             <th class="py-3 px-3 text-right">Accion</th>
                         </tr>
                     </thead>
-                    <tbody id="tabla-piso" class="text-sm divide-y divide-slate-700">
+                    <tbody id="tabla-piso" class="text-sm divide-y">
                     </tbody>
                 </table>
             </div>
@@ -498,71 +521,71 @@
     </div>
 
     <div id="modal-lista-temporal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 relative border border-slate-700">
-            <div class="flex justify-between items-center border-b pb-3 border-slate-700">
-                <h3 class="font-bold text-white text-lg flex items-center gap-2">&#128221; Articulos Agregados</h3>
-                <button type="button" onclick="cerrarModalListaTemporal()" class="text-slate-400 hover:text-white font-bold text-lg">&#10005;</button>
+        <div class="card-box rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 relative border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-title text-lg flex items-center gap-2">&#128221; Articulos Agregados</h3>
+                <button type="button" onclick="cerrarModalListaTemporal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
             </div>
             <div id="contenido-lista-temporal" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
-            <div class="border-t border-slate-700 pt-3 flex flex-col gap-2">
+            <div class="border-t pt-3 flex flex-col gap-2">
                 <button type="button" onclick="enviarListaTemporalAAlmacen()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700 transition text-sm shadow">Enviar a Almacen</button>
-                <button type="button" onclick="cerrarModalListaTemporal()" class="w-full bg-slate-800 text-slate-200 font-semibold py-2 rounded-xl text-xs hover:bg-slate-700 border border-slate-700">Seguir agregando</button>
+                <button type="button" onclick="cerrarModalListaTemporal()" class="w-full subcard-box border text-title font-semibold py-2 rounded-xl text-xs hover:bg-slate-200 dark:hover:bg-slate-700">Seguir agregando</button>
             </div>
         </div>
     </div>
 
     <div id="modal-gestion-almacen" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border border-slate-700">
-            <div class="flex justify-between items-center border-b pb-3 border-slate-700">
-                <h3 class="font-bold text-white text-lg flex items-center gap-2" id="titulo-modal-almacen">&#128230; Detalle de Pedidos</h3>
-                <button type="button" onclick="cerrarGestionAlmacen()" class="text-slate-400 hover:text-white font-bold text-lg">&#10005;</button>
+        <div class="card-box rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-title text-lg flex items-center gap-2" id="titulo-modal-almacen">&#128230; Detalle de Pedidos</h3>
+                <button type="button" onclick="cerrarGestionAlmacen()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
             </div>
-            <div id="contenido-detalle-almacen" class="space-y-4 text-sm text-slate-300"></div>
-            <div class="border-t border-slate-700 pt-3" id="acciones-detalle-almacen"></div>
+            <div id="contenido-detalle-almacen" class="space-y-4 text-sm text-title"></div>
+            <div class="border-t pt-3" id="acciones-detalle-almacen"></div>
         </div>
     </div>
 
     <div id="modal-gestion-piso" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border border-slate-700">
-            <div class="flex justify-between items-center border-b pb-3 border-slate-700">
-                <h3 class="font-bold text-white text-lg flex items-center gap-2">&#128221; Detalle de tu Solicitud</h3>
-                <button type="button" onclick="cerrarGestionPiso()" class="text-slate-400 hover:text-white font-bold text-lg">&#10005;</button>
+        <div class="card-box rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-title text-lg flex items-center gap-2">&#128221; Detalle de tu Solicitud</h3>
+                <button type="button" onclick="cerrarGestionPiso()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
             </div>
-            <div id="contenido-detalle-piso" class="space-y-3 text-sm text-slate-300"></div>
-            <div class="border-t border-slate-700 pt-3 flex flex-col gap-2" id="acciones-detalle-piso"></div>
+            <div id="contenido-detalle-piso" class="space-y-3 text-sm text-title"></div>
+            <div class="border-t pt-3 flex flex-col gap-2" id="acciones-detalle-piso"></div>
         </div>
     </div>
 
     <div id="modal-tallas" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 rounded-2xl shadow-2xl max-w-xs w-full p-5 space-y-4 border border-slate-700">
-            <h3 class="font-bold text-white text-base border-b border-slate-700 pb-2">Seleccionar Tallas</h3>
+        <div class="card-box rounded-2xl shadow-2xl max-w-xs w-full p-5 space-y-4 border">
+            <h3 class="font-bold text-title text-base border-b pb-2">Seleccionar Tallas</h3>
             <div>
-                <label class="flex items-center gap-2 p-2 bg-blue-950/40 rounded border border-blue-800/60 cursor-pointer hover:bg-blue-900/60">
+                <label class="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-950/40 rounded border border-blue-200 dark:border-blue-800/60 cursor-pointer">
                     <input type="checkbox" id="chk-todas" onchange="toggleTodasTallas(this)" class="accent-blue-600 rounded">
-                    <span class="font-bold text-xs text-blue-300">Todas las tallas</span>
+                    <span class="font-bold text-xs text-blue-600 dark:text-blue-300">Todas las tallas</span>
                 </label>
             </div>
             <div class="grid grid-cols-2 gap-2 text-sm max-h-60 overflow-y-auto pr-1">
-                <label class="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700 cursor-pointer hover:bg-slate-700">
-                    <input type="checkbox" value="S" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-200">S</span>
+                <label class="flex items-center gap-2 p-2 subcard-box rounded border cursor-pointer">
+                    <input type="checkbox" value="S" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-title">S</span>
                 </label>
-                <label class="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700 cursor-pointer hover:bg-slate-700">
-                    <input type="checkbox" value="M" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-200">M</span>
+                <label class="flex items-center gap-2 p-2 subcard-box rounded border cursor-pointer">
+                    <input type="checkbox" value="M" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-title">M</span>
                 </label>
-                <label class="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700 cursor-pointer hover:bg-slate-700">
-                    <input type="checkbox" value="L" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-200">L</span>
+                <label class="flex items-center gap-2 p-2 subcard-box rounded border cursor-pointer">
+                    <input type="checkbox" value="L" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-title">L</span>
                 </label>
-                <label class="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700 cursor-pointer hover:bg-slate-700">
-                    <input type="checkbox" value="XL" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-200">XL</span>
+                <label class="flex items-center gap-2 p-2 subcard-box rounded border cursor-pointer">
+                    <input type="checkbox" value="XL" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-title">XL</span>
                 </label>
-                <label class="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700 cursor-pointer hover:bg-slate-700">
-                    <input type="checkbox" value="2X" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-200">2X</span>
+                <label class="flex items-center gap-2 p-2 subcard-box rounded border cursor-pointer">
+                    <input type="checkbox" value="2X" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-title">2X</span>
                 </label>
-                <label class="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700 cursor-pointer hover:bg-slate-700">
-                    <input type="checkbox" value="3X" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-200">3X</span>
+                <label class="flex items-center gap-2 p-2 subcard-box rounded border cursor-pointer">
+                    <input type="checkbox" value="3X" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-title">3X</span>
                 </label>
-                <label class="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700 cursor-pointer hover:bg-slate-700">
-                    <input type="checkbox" value="4X" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-slate-200">4X</span>
+                <label class="flex items-center gap-2 p-2 subcard-box rounded border cursor-pointer">
+                    <input type="checkbox" value="4X" onchange="actualizarTallas()" class="chk-talla accent-blue-600 rounded"><span class="font-semibold text-xs text-title">4X</span>
                 </label>
             </div>
             <button type="button" onclick="toggleModalTallas()" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg text-sm hover:bg-blue-700">Aceptar y Cerrar</button>
@@ -570,13 +593,13 @@
     </div>
 
     <div id="modal-scanner" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50 transition-all">
-        <div class="bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4 relative border border-slate-700">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <div class="card-box rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4 relative border">
+            <div class="flex justify-between items-center border-b pb-3">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">&#128247;</span>
-                    <h3 id="titulo-modal-scanner" class="font-bold text-white text-base">Escáner de Alta Precisión</h3>
+                    <h3 id="titulo-modal-scanner" class="font-bold text-title text-base">Escáner de Alta Precisión</h3>
                 </div>
-                <button type="button" onclick="cerrarScanner()" class="text-slate-400 hover:text-white font-bold text-lg p-1">&#10005;</button>
+                <button type="button" onclick="cerrarScanner()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg p-1">&#10005;</button>
             </div>
             
             <div class="relative w-full h-64 bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center">
@@ -588,20 +611,20 @@
                 </div>
             </div>
 
-            <p class="text-xs text-center text-slate-400 font-medium">Apunta al código de barras o QR.</p>
+            <p class="text-xs text-center text-muted font-medium">Apunta al código de barras o QR.</p>
 
             <div class="flex gap-3 pt-1">
                 <button type="button" id="btn-linterna" onclick="toggleFlash()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow flex items-center justify-center gap-2">
                     <span>&#128262;</span> Linterna
                 </button>
-                <button type="button" onclick="cerrarScanner()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2.5 rounded-xl text-sm transition border border-slate-700">
+                <button type="button" onclick="cerrarScanner()" class="flex-1 subcard-box border text-title font-semibold py-2.5 rounded-xl text-sm transition">
                     Cerrar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- REGISTRAR SERVICE WORKER DE PWA Y FCM -->
+    <!-- REGISTRAR SERVICE WORKER -->
     <script>
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('pwabuilder-sw.js').catch(err => console.log('Error PWA SW:', err));
@@ -663,6 +686,7 @@
         let listaCatalogo = [];
         let mapaVendedoresEstado = {};
         let modoEscannerActual = 'piso';
+        let filtroCategoriaCatalogo = 'TODOS'; // Variable para filtro rápido de categoría
         
         let listaTemporalVendedor = [];
         const borradorGuardado = localStorage.getItem('surty_borrador');
@@ -677,9 +701,15 @@
         let torchActive = false;
         let primerCarga = true;
         let filtroAlmacenActual = 'TODOS';
-        let darkModeActive = true;
+        let darkModeActive = false;
 
         window.addEventListener('DOMContentLoaded', () => {
+            const themeSaved = localStorage.getItem('surty_theme');
+            if (themeSaved === 'dark') {
+                darkModeActive = true;
+                document.body.classList.add('dark-mode');
+            }
+
             actualizarUIListaTemporal();
             iniciarEscuchaCatalogo();
             configurarAutocompletadoCodigo();
@@ -737,6 +767,64 @@
             }
         });
 
+        function toggleFormularioCatalogo() {
+            const form = document.getElementById('formulario-registro-catalogo');
+            const btn = document.getElementById('btn-toggle-registro');
+            const txt = document.getElementById('texto-btn-toggle');
+            const ico = document.getElementById('icono-btn-toggle');
+
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                txt.innerText = "✕ Cancelar / Cerrar Formulario";
+                ico.innerHTML = "&#9650;";
+                btn.className = "w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow flex items-center justify-between";
+                setTimeout(() => {
+                    const inputCod = document.getElementById('cat-codigo');
+                    if (inputCod) inputCod.focus();
+                }, 100);
+            } else {
+                form.classList.add('hidden');
+                txt.innerText = "+ Agregar Nueva Referencia al Catálogo";
+                ico.innerHTML = "&#9660;";
+                btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow flex items-center justify-between";
+            }
+        }
+
+        function scrollEnfoqueBuscador() {
+            setTimeout(() => {
+                const contenedor = document.getElementById('contenedor-busqueda-catalogo');
+                if (contenedor) {
+                    contenedor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 250);
+        }
+
+        // FUNCIÓN PARA FILTRAR POR CATEGORÍA EN EL CATÁLOGO
+        function filtrarCategoriaCatalogo(cat) {
+            filtroCategoriaCatalogo = cat;
+            const pills = ['TODOS', 'Dama', 'Caballero', 'Niño', 'Hogar', 'Intimo'];
+            
+            pills.forEach(p => {
+                const idBtn = 'cat-pill-' + (p === 'TODOS' ? 'todos' : p.toLowerCase().replace('ñ', 'n').replace('í', 'i'));
+                const el = document.getElementById(idBtn);
+                if (el) {
+                    if (p === cat) {
+                        el.className = "px-2.5 py-1 rounded-full font-bold bg-blue-600 text-white whitespace-nowrap shadow-sm";
+                    } else {
+                        el.className = "px-2.5 py-1 rounded-full font-semibold subcard-box border text-title whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700";
+                    }
+                }
+            });
+
+            renderizarTablaCatalogo();
+        }
+
+        function toggleDarkMode() {
+            darkModeActive = !darkModeActive;
+            document.body.classList.toggle('dark-mode', darkModeActive);
+            localStorage.setItem('surty_theme', darkModeActive ? 'dark' : 'light');
+        }
+
         function abrirMenuLateral() {
             const tituloMenu = document.getElementById('titulo-menu-lateral');
             const opcionesMenu = document.getElementById('opciones-menu-lateral');
@@ -745,13 +833,13 @@
                 if (tituloMenu) tituloMenu.innerText = 'ALMACÉN';
                 if (opcionesMenu) {
                     opcionesMenu.innerHTML = `
-                        <button type="button" onclick="seleccionarOpcionMenu('pedidos-almacen')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                        <button type="button" onclick="seleccionarOpcionMenu('pedidos-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128230; Pedidos
                         </button>
-                        <button type="button" onclick="seleccionarOpcionMenu('catalogo-almacen')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                        <button type="button" onclick="seleccionarOpcionMenu('catalogo-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128218; Catálogo (Productos Guardados)
                         </button>
-                        <button type="button" onclick="seleccionarOpcionMenu('vendedores-almacen')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                        <button type="button" onclick="seleccionarOpcionMenu('vendedores-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128100; Vendedores
                         </button>
                     `;
@@ -760,13 +848,13 @@
                 if (tituloMenu) tituloMenu.innerText = 'PISO DE VENTA';
                 if (opcionesMenu) {
                     opcionesMenu.innerHTML = `
-                        <button type="button" onclick="seleccionarOpcionMenu('surtido')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                        <button type="button" onclick="seleccionarOpcionMenu('surtido')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128722; Surtido
                         </button>
-                        <button type="button" onclick="seleccionarOpcionMenu('cliente')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                        <button type="button" onclick="seleccionarOpcionMenu('cliente')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128100; Cliente
                         </button>
-                        <button type="button" onclick="seleccionarOpcionMenu('estado')" class="w-full text-left bg-slate-800/60 hover:bg-slate-800 text-white p-3.5 rounded-xl font-semibold flex items-center gap-3 transition border border-slate-700">
+                        <button type="button" onclick="seleccionarOpcionMenu('estado')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128221; Estado de Solicitudes
                         </button>
                     `;
@@ -879,11 +967,6 @@
             document.getElementById('modal-alerta').classList.add('hidden');
         }
 
-        function toggleDarkMode() {
-            darkModeActive = !darkModeActive;
-            document.body.classList.toggle('dark-mode', darkModeActive);
-        }
-
         function filtrarAlmacen(estado) {
             filtroAlmacenActual = estado;
             const btnTodos = document.getElementById('btn-filtro-todos');
@@ -891,7 +974,7 @@
             const btnPrep = document.getElementById('btn-filtro-preparacion');
 
             [btnTodos, btnSol, btnPrep].forEach(b => {
-                if(b) b.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 shadow-sm";
+                if(b) b.className = "px-3 py-1.5 rounded-lg text-xs font-bold subcard-box border text-muted hover:bg-slate-200 dark:hover:bg-slate-700 shadow-sm";
             });
 
             if (estado === 'TODOS' && btnTodos) btnTodos.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow";
@@ -956,12 +1039,12 @@
                 let html = '';
                 filtrados.forEach(item => {
                     html += `
-                        <div onclick="seleccionarSugerenciaCatalogo('${item.codigo}', '${item.descripcion.replace(/'/g, "\\'")}', '${item.categoria}')" class="p-3 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700 last:border-b-0 flex items-center justify-between">
+                        <div onclick="seleccionarSugerenciaCatalogo('${item.codigo}', '${item.descripcion.replace(/'/g, "\\'")}', '${item.categoria}')" class="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs border-b last:border-b-0 flex items-center justify-between">
                             <div>
-                                <span class="font-mono font-bold text-blue-400 text-sm">${item.codigo}</span> - 
-                                <span class="text-slate-200 font-medium">${item.descripcion}</span>
+                                <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">${item.codigo}</span> - 
+                                <span class="font-medium text-title">${item.descripcion}</span>
                             </div>
-                            <span class="text-[10px] bg-slate-700 px-1.5 py-0.5 rounded text-slate-300">${item.categoria}</span>
+                            <span class="text-[10px] subcard-box px-1.5 py-0.5 rounded text-muted border">${item.categoria}</span>
                         </div>
                     `;
                 });
@@ -1026,7 +1109,7 @@
                 alert("¡Referencia guardada en el catálogo correctamente!");
                 document.getElementById('cat-codigo').value = '';
                 document.getElementById('cat-descripcion').value = '';
-                document.getElementById('cat-codigo').focus();
+                toggleFormularioCatalogo();
             }).catch(err => alert("Error al guardar: " + err.message));
         }
 
@@ -1034,28 +1117,39 @@
             const tbody = document.getElementById('tabla-catalogo');
             if (!tbody) return;
 
-            const filtro = document.getElementById('busqueda-catalogo') ? document.getElementById('busqueda-catalogo').value.toLowerCase().trim() : '';
+            const filtroTexto = document.getElementById('busqueda-catalogo') ? document.getElementById('busqueda-catalogo').value.toLowerCase().trim() : '';
             
-            const filtrados = listaCatalogo.filter(item => 
-                item.codigo.toLowerCase().includes(filtro) || 
-                item.descripcion.toLowerCase().includes(filtro) ||
-                item.categoria.toLowerCase().includes(filtro)
-            );
+            const filtrados = listaCatalogo.filter(item => {
+                // Filtrar por categoría seleccionada
+                if (filtroCategoriaCatalogo !== 'TODOS') {
+                    if (!item.categoria || item.categoria.toLowerCase() !== filtroCategoriaCatalogo.toLowerCase()) {
+                        return false;
+                    }
+                }
+                // Filtrar por texto escrito
+                if (filtroTexto) {
+                    const coincide = item.codigo.toLowerCase().includes(filtroTexto) || 
+                                     item.descripcion.toLowerCase().includes(filtroTexto) ||
+                                     item.categoria.toLowerCase().includes(filtroTexto);
+                    if (!coincide) return false;
+                }
+                return true;
+            });
 
             if (filtrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">No hay referencias en el catálogo</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-muted">No hay referencias en el catálogo</td></tr>`;
                 return;
             }
 
             let html = '';
             filtrados.forEach(item => {
                 html += `
-                    <tr class="hover:bg-slate-800/50">
-                        <td class="py-3 px-3 font-mono font-bold text-blue-400">${item.codigo}</td>
-                        <td class="py-3 px-3 text-slate-200 font-medium">${item.descripcion}</td>
-                        <td class="py-3 px-3"><span class="bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded-full font-semibold border border-slate-700">${item.categoria}</span></td>
-                        <td class="py-3 px-3 text-right">
-                            <button type="button" onclick="eliminarDelCatalogo('${item.codigo}')" class="bg-red-600 text-white px-2.5 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 shadow">Eliminar</button>
+                    <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                        <td class="py-2.5 px-3 font-mono font-bold text-blue-600 dark:text-blue-400 text-xs">${item.codigo}</td>
+                        <td class="py-2.5 px-3 text-title font-medium text-xs">${item.descripcion}</td>
+                        <td class="py-2.5 px-3"><span class="subcard-box text-title text-[10px] px-1.5 py-0.5 rounded-full font-semibold border">${item.categoria}</span></td>
+                        <td class="py-2.5 px-3 text-right">
+                            <button type="button" onclick="eliminarDelCatalogo('${item.codigo}')" class="bg-red-600 text-white px-2 py-1 rounded-lg text-[10px] font-semibold hover:bg-red-700 shadow">Eliminar</button>
                         </td>
                     </tr>
                 `;
@@ -1080,7 +1174,7 @@
             if (!codigo) {
                 if (mensajeEl) {
                     mensajeEl.innerText = "⚠️ Ingresa o escanea un código primero.";
-                    mensajeEl.className = "text-xs mt-1 font-medium text-amber-400";
+                    mensajeEl.className = "text-xs mt-1 font-medium text-amber-600 dark:text-amber-400";
                     mensajeEl.classList.remove('hidden');
                 }
                 return;
@@ -1109,7 +1203,7 @@
                     );
                     if (mensajeEl) {
                         mensajeEl.innerText = "❌ Referencia no registrada en el catálogo";
-                        mensajeEl.className = "text-xs mt-1 font-medium text-red-400";
+                        mensajeEl.className = "text-xs mt-1 font-medium text-red-600 dark:text-red-400";
                         mensajeEl.classList.remove('hidden');
                     }
                     if (seccionDetalles) seccionDetalles.classList.add('hidden');
@@ -1192,7 +1286,7 @@
             const tbody = document.getElementById('tabla-vendedores');
             if (!tbody) return;
             if (listaVendedores.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">No hay vendedores registrados</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-muted">No hay vendedores registrados</td></tr>`;
                 return;
             }
             let html = '';
@@ -1207,14 +1301,14 @@
                 let textoEstado = conectadoReal ? 'Conectado (En la app)' : 'Desconectado';
 
                 html += `
-                    <tr class="hover:bg-slate-800/50">
-                        <td class="py-3 px-3 font-semibold text-slate-200 flex items-center gap-2">
+                    <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                        <td class="py-3 px-3 font-semibold text-title flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full inline-block ${colorLuz}" title="${textoEstado}"></span>
                             ${v.nombre}
                         </td>
-                        <td class="py-3 px-3 font-mono text-xs text-blue-400">${v.id}</td>
+                        <td class="py-3 px-3 font-mono text-xs text-blue-600 dark:text-blue-400">${v.id}</td>
                         <td class="py-3 px-3">
-                            <span class="text-xs px-2.5 py-1 rounded-full font-semibold ${conectadoReal ? 'bg-green-950/60 text-green-300 border border-green-800/50' : 'bg-red-950/60 text-red-300 border border-red-800/50'}">
+                            <span class="text-xs px-2.5 py-1 rounded-full font-semibold ${conectadoReal ? 'bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/50' : 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800/50'}">
                                 ${textoEstado}
                             </span>
                         </td>
@@ -1285,12 +1379,12 @@
 
             if (tipo === 'piso') {
                 btnPiso.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition bg-blue-600 text-white shadow";
-                btnAlmacen.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition text-slate-400";
+                btnAlmacen.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition text-muted";
                 formPiso.classList.remove('hidden');
                 formAlmacen.classList.add('hidden');
             } else {
                 btnAlmacen.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition bg-blue-600 text-white shadow";
-                btnPiso.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition text-slate-400";
+                btnPiso.className = "flex-1 py-2 text-sm font-semibold rounded-lg transition text-muted";
                 formAlmacen.classList.remove('hidden');
                 formPiso.classList.add('hidden');
             }
@@ -1441,14 +1535,14 @@
             const textoBoton = document.getElementById('texto-boton-tallas');
 
             if (tallasSeleccionadas.length === 0) {
-                contenedor.innerHTML = `<span class="text-[10px] text-slate-400 italic">Ninguna</span>`;
+                contenedor.innerHTML = `<span class="text-[10px] text-muted italic">Ninguna</span>`;
                 textoBoton.innerText = "Elegir Tallas...";
             } else if (checkboxes.length === checkboxesChecked.length) {
-                contenedor.innerHTML = `<span class="bg-blue-900/60 text-blue-300 text-[10px] px-2 py-0.5 rounded-full font-bold border border-blue-800">Todas</span>`;
+                contenedor.innerHTML = `<span class="bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded-full font-bold border border-blue-200 dark:border-blue-800">Todas</span>`;
                 textoBoton.innerText = "Tallas (Todas)";
             } else {
                 contenedor.innerHTML = tallasSeleccionadas.map(t => 
-                    `<span class="bg-blue-900/60 text-blue-300 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-blue-800">${t}</span>`
+                    `<span class="bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-blue-200 dark:border-blue-800">${t}</span>`
                 ).join(' ');
                 textoBoton.innerText = `Tallas (${tallasSeleccionadas.length})`;
             }
@@ -1459,7 +1553,13 @@
             document.getElementById('modal-scanner').classList.remove('hidden');
             const tituloModal = document.getElementById('titulo-modal-scanner');
             if (tituloModal) {
-                tituloModal.innerText = modo === 'catalogo' ? 'Escáner para Catálogo' : 'Escáner de Alta Precisión';
+                if (modo === 'catalogo') {
+                    tituloModal.innerText = 'Escáner para Catálogo';
+                } else if (modo === 'busqueda-catalogo') {
+                    tituloModal.innerText = 'Escáner para Buscar en Catálogo';
+                } else {
+                    tituloModal.innerText = 'Escáner de Alta Precisión';
+                }
             }
             torchActive = false;
             
@@ -1476,6 +1576,10 @@
 
         function abrirScannerCatalogo() {
             abrirScanner('catalogo');
+        }
+
+        function abrirScannerBusquedaCatalogo() {
+            abrirScanner('busqueda-catalogo');
         }
 
         function iniciarLectorCamara() {
@@ -1504,6 +1608,10 @@
                     document.getElementById('cat-codigo').value = decodedText;
                     cerrarScanner();
                     document.getElementById('cat-descripcion').focus();
+                } else if (modoEscannerActual === 'busqueda-catalogo') {
+                    document.getElementById('busqueda-catalogo').value = decodedText;
+                    cerrarScanner();
+                    renderizarTablaCatalogo();
                 } else {
                     document.getElementById('codigo').value = decodedText;
                     cerrarScanner();
@@ -1650,22 +1758,22 @@
             if (!contenedor) return;
 
             if (listaTemporalVendedor.length === 0) {
-                contenedor.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay articulos agregados en la lista.</p>`;
+                contenedor.innerHTML = `<p class="text-xs text-muted text-center py-4">No hay articulos agregados en la lista.</p>`;
                 return;
             }
 
             let html = '';
             listaTemporalVendedor.forEach((item) => {
                 html += `
-                    <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-center subcard-box p-3 rounded-xl border">
                         <div>
-                            <span class="font-mono font-bold text-blue-400 text-sm">${item.codigo}</span> - 
-                            <span class="font-semibold text-slate-200 text-xs">${item.descripcion}</span>
-                            <div class="text-[10px] text-slate-400">
+                            <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">${item.codigo}</span> - 
+                            <span class="font-semibold text-title text-xs">${item.descripcion}</span>
+                            <div class="text-[10px] text-muted">
                                 Tallas: <b>${item.tallas}</b> | Prio: <b>${item.prioridad}</b> ${item.prioridad === 'Surtido' && item.cantidad ? `| Cant: ${item.cantidad}` : ''}
                             </div>
                         </div>
-                        <button type="button" onclick="eliminarItemListaTemporal(${item.tempId})" class="text-red-400 hover:text-red-300 font-bold px-2 py-1 text-xs">&#10005;</button>
+                        <button type="button" onclick="eliminarItemListaTemporal(${item.tempId})" class="text-red-500 font-bold px-2 py-1 text-xs">&#10005;</button>
                     </div>
                 `;
             });
@@ -1689,7 +1797,6 @@
             document.getElementById('modal-lista-temporal').classList.add('hidden');
         }
 
-        // FUNCIÓN MEJORADA: Envía la lista o captura el formulario actual automáticamente
         function enviarListaTemporalAAlmacen() {
             const codigoInput = document.getElementById('codigo');
             const descInput = document.getElementById('descripcion');
@@ -1790,47 +1897,47 @@
             if (items.length === 0) return;
 
             const primerItem = items[0];
-            let badgePrio = primerItem.prioridad === 'Cliente' ? 'bg-pink-950/60 text-pink-300 border border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-950/60 text-indigo-300 border border-indigo-800/60';
+            let badgePrio = primerItem.prioridad === 'Cliente' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-300 dark:border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800/60';
             let luzVendedor = obtenerLuzEstado(primerItem.vendedor);
 
             let htmlDetalle = `
-                <div class="grid grid-cols-2 gap-2 bg-slate-800/80 p-3 rounded-xl border border-slate-700 mb-3">
+                <div class="grid grid-cols-2 gap-2 subcard-box p-3 rounded-xl border mb-3">
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Vendedor</span>
-                        <span class="font-bold text-white">${primerItem.vendedor} ${luzVendedor}</span>
+                        <span class="text-[10px] uppercase font-bold text-muted block">Vendedor</span>
+                        <span class="font-bold text-title">${primerItem.vendedor} ${luzVendedor}</span>
                     </div>
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 block">TIPO ENV&Iacute;O</span>
-                        <span class="px-2 py-0.5 rounded text-xs font-bold ${esGrupo ? 'bg-purple-950/60 text-purple-300 border border-purple-800/60' : 'bg-slate-700 text-slate-200 border border-slate-600'}">
+                        <span class="text-[10px] uppercase font-bold text-muted block">TIPO ENV&Iacute;O</span>
+                        <span class="px-2 py-0.5 rounded text-xs font-bold ${esGrupo ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300 dark:border-purple-800/60' : 'subcard-box text-title border'}">
                             ${esGrupo ? `Lista de ${items.length} art&iacute;culos` : '1 Art&iacute;culo Individual'}
                         </span>
                     </div>
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Fecha y Hora</span>
-                        <span class="text-xs text-slate-300">${primerItem.fecha || ''} ${primerItem.hora}</span>
+                        <span class="text-[10px] uppercase font-bold text-muted block">Fecha y Hora</span>
+                        <span class="text-xs text-muted">${primerItem.fecha || ''} ${primerItem.hora}</span>
                     </div>
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Prioridad</span>
+                        <span class="text-[10px] uppercase font-bold text-muted block">Prioridad</span>
                         <span class="px-2 py-0.5 rounded text-xs ${badgePrio}">${primerItem.prioridad}</span>
                     </div>
                 </div>
             `;
 
             items.forEach((item) => {
-                let badgeColor = 'bg-slate-800 text-slate-300 border border-slate-700';
+                let badgeColor = 'subcard-box text-title border';
                 let textoEstado = item.estado;
 
-                if (item.estado === 'SOLICITADO') { badgeColor = 'bg-amber-950/60 text-amber-300 border border-amber-800/60'; textoEstado = 'Solicitado'; }
-                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-950/60 text-blue-300 border border-blue-800/60'; textoEstado = 'Preparando...'; }
-                if (item.estado === 'NO_HAY') { badgeColor = 'bg-orange-950/60 text-orange-300 border border-orange-800/60'; textoEstado = 'No hay'; }
-                if (item.estado === 'AGOTADO') { badgeColor = 'bg-red-950/60 text-red-300 border border-red-800/60'; textoEstado = 'Agotado'; }
-                if (item.estado === 'COMPLETADO') { badgeColor = 'bg-green-950/60 text-green-300 border border-green-800/60'; textoEstado = 'Listo / Recibido'; }
+                if (item.estado === 'SOLICITADO') { badgeColor = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'; textoEstado = 'Solicitado'; }
+                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60'; textoEstado = 'Preparando...'; }
+                if (item.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-300 dark:border-orange-800/60'; textoEstado = 'No hay'; }
+                if (item.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800/60'; textoEstado = 'Agotado'; }
+                if (item.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/60'; textoEstado = 'Listo / Recibido'; }
 
                 let botonesOpciones = '';
 
                 if (item.estado === 'COMPLETADO') {
                     botonesOpciones = `
-                        <button type="button" onclick="eliminarPedidoDesdeAlmacen('${item.id}', '${idOGrupo}', ${esGrupo})" class="w-full sm:w-auto px-4 py-1.5 bg-slate-800 text-white border border-slate-700 rounded-lg text-xs font-bold hover:bg-slate-700 transition shadow ml-auto">Eliminar</button>
+                        <button type="button" onclick="eliminarPedidoDesdeAlmacen('${item.id}', '${idOGrupo}', ${esGrupo})" class="w-full sm:w-auto px-4 py-1.5 subcard-box text-title border rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow ml-auto">Eliminar</button>
                     `;
                 } else {
                     let botonNoHay = '';
@@ -1842,23 +1949,23 @@
                         <button type="button" onclick="cambiarEstadoIndividual('${item.id}', 'COMPLETADO', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-green-600 text-white rounded text-[11px] font-semibold hover:bg-green-700">Listo</button>
                         <button type="button" onclick="cambiarEstadoIndividual('${item.id}', 'AGOTADO', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-red-600 text-white rounded text-[11px] font-semibold hover:bg-red-700">Agotado</button>
                         ${botonNoHay}
-                        <button type="button" onclick="eliminarPedidoDesdeAlmacen('${item.id}', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-slate-800 text-white border border-slate-700 rounded text-[11px] font-semibold hover:bg-slate-700 ml-auto">Eliminar</button>
+                        <button type="button" onclick="eliminarPedidoDesdeAlmacen('${item.id}', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 subcard-box text-title border rounded text-[11px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 ml-auto">Eliminar</button>
                     `;
                 }
 
                 htmlDetalle += `
-                    <div class="bg-slate-800/90 p-3.5 rounded-xl border border-slate-700 space-y-2 relative">
-                        <div class="flex justify-between items-center border-b border-slate-700 pb-1.5">
-                            <span class="font-mono font-bold text-base text-blue-400">${item.codigo}</span>
+                    <div class="subcard-box p-3.5 rounded-xl border space-y-2 relative">
+                        <div class="flex justify-between items-center border-b pb-1.5">
+                            <span class="font-mono font-bold text-base text-blue-600 dark:text-blue-400">${item.codigo}</span>
                             <span class="text-xs px-2.5 py-0.5 rounded-full font-bold ${badgeColor}">${textoEstado}</span>
                         </div>
                         <div class="text-xs space-y-1">
-                            <p><b class="text-slate-300">Descripci&oacute;n:</b> ${item.descripcion}</p>
-                            <p><b class="text-slate-300">Categor&iacute;a:</b> ${item.categoria} | <b class="text-slate-300">Tallas:</b> ${item.tallas}</p>
-                            ${item.prioridad === 'Surtido' ? `<p><b class="text-slate-300">Gancho:</b> ${item.tipoGancho} | <b class="text-slate-300">Cantidad:</b> ${item.cantidad}</p>` : ''}
-                            ${item.opcional ? `<p><b class="text-slate-300">Detalle:</b> ${item.opcional}</p>` : ''}
+                            <p><b class="text-muted">Descripci&oacute;n:</b> ${item.descripcion}</p>
+                            <p><b class="text-muted">Categor&iacute;a:</b> ${item.categoria} | <b class="text-muted">Tallas:</b> ${item.tallas}</p>
+                            ${item.prioridad === 'Surtido' ? `<p><b class="text-muted">Gancho:</b> ${item.tipoGancho} | <b class="text-muted">Cantidad:</b> ${item.cantidad}</p>` : ''}
+                            ${item.opcional ? `<p><b class="text-muted">Detalle:</b> ${item.opcional}</p>` : ''}
                         </div>
-                        <div class="pt-2 border-t border-slate-700 mt-2 flex flex-wrap items-center gap-1.5">
+                        <div class="pt-2 border-t mt-2 flex flex-wrap items-center gap-1.5">
                             ${botonesOpciones}
                         </div>
                     </div>
@@ -1934,52 +2041,52 @@
             if (items.length === 0) return;
 
             const primerItem = items[0];
-            let badgePrio = primerItem.prioridad === 'Cliente' ? 'bg-pink-950/60 text-pink-300 border border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-950/60 text-indigo-300 border border-indigo-800/60';
+            let badgePrio = primerItem.prioridad === 'Cliente' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-300 dark:border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800/60';
             
             let htmlDetalle = `
-                <div class="grid grid-cols-2 gap-2 bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+                <div class="grid grid-cols-2 gap-2 subcard-box p-3 rounded-xl border">
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Vendedor</span>
-                        <span class="font-bold text-white">${primerItem.vendedor}</span>
+                        <span class="text-[10px] uppercase font-bold text-muted block">Vendedor</span>
+                        <span class="font-bold text-title">${primerItem.vendedor}</span>
                     </div>
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 block">TIPO ENV&Iacute;O</span>
-                        <span class="px-2 py-0.5 rounded text-xs font-bold ${esGrupo ? 'bg-purple-950/60 text-purple-300 border border-purple-800/60' : 'bg-slate-700 text-slate-200 border border-slate-600'}">
+                        <span class="text-[10px] uppercase font-bold text-muted block">TIPO ENV&Iacute;O</span>
+                        <span class="px-2 py-0.5 rounded text-xs font-bold ${esGrupo ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300 dark:border-purple-800/60' : 'subcard-box text-title border'}">
                             ${esGrupo ? `Lista de ${items.length} art&iacute;culos` : '1 Art&iacute;culo Individual'}
                         </span>
                     </div>
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Fecha y Hora</span>
-                        <span class="text-xs text-slate-300">${primerItem.fecha || ''} ${primerItem.hora}</span>
+                        <span class="text-[10px] uppercase font-bold text-muted block">Fecha y Hora</span>
+                        <span class="text-xs text-muted">${primerItem.fecha || ''} ${primerItem.hora}</span>
                     </div>
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Prioridad</span>
+                        <span class="text-[10px] uppercase font-bold text-muted block">Prioridad</span>
                         <span class="px-2 py-0.5 rounded text-xs ${badgePrio}">${primerItem.prioridad}</span>
                     </div>
                 </div>
             `;
 
             items.forEach((item) => {
-                let badgeColor = 'bg-slate-800 text-slate-300 border border-slate-700';
+                let badgeColor = 'subcard-box text-title border';
                 let textoEstado = item.estado;
 
-                if (item.estado === 'SOLICITADO') { badgeColor = 'bg-amber-950/60 text-amber-300 border border-amber-800/60'; textoEstado = 'Solicitado'; }
-                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-950/60 text-blue-300 border border-blue-800/60'; textoEstado = 'Preparando...'; }
-                if (item.estado === 'NO_HAY') { badgeColor = 'bg-orange-950/60 text-orange-300 border border-orange-800/60'; textoEstado = 'No hay'; }
-                if (item.estado === 'AGOTADO') { badgeColor = 'bg-red-950/60 text-red-300 border border-red-800/60'; textoEstado = 'Agotado'; }
-                if (item.estado === 'COMPLETADO') { badgeColor = 'bg-green-950/60 text-green-300 border border-green-800/60'; textoEstado = 'Listo'; }
+                if (item.estado === 'SOLICITADO') { badgeColor = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'; textoEstado = 'Solicitado'; }
+                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60'; textoEstado = 'Preparando...'; }
+                if (item.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-300 dark:border-orange-800/60'; textoEstado = 'No hay'; }
+                if (item.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800/60'; textoEstado = 'Agotado'; }
+                if (item.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/60'; textoEstado = 'Listo'; }
 
                 htmlDetalle += `
-                    <div class="bg-slate-800/90 p-3 rounded-xl border border-slate-700 space-y-2 relative mt-2">
-                        <div class="flex justify-between items-center border-b border-slate-700 pb-1">
-                            <span class="font-mono font-bold text-sm text-blue-400">${item.codigo}</span>
+                    <div class="subcard-box p-3 rounded-xl border space-y-2 relative mt-2">
+                        <div class="flex justify-between items-center border-b pb-1">
+                            <span class="font-mono font-bold text-sm text-blue-600 dark:text-blue-400">${item.codigo}</span>
                             <span class="text-xs px-2.5 py-0.5 rounded-full font-bold ${badgeColor}">${textoEstado}</span>
                         </div>
                         <div class="text-xs space-y-1">
-                            <p><b class="text-slate-300">Descripci&oacute;n:</b> ${item.descripcion}</p>
-                            <p><b class="text-slate-300">Categor&iacute;a:</b> ${item.categoria} | <b class="text-slate-300">Tallas:</b> ${item.tallas}</p>
-                            ${item.prioridad === 'Surtido' ? `<p><b class="text-slate-300">Gancho:</b> ${item.tipoGancho} | <b class="text-slate-300">Cantidad:</b> ${item.cantidad}</p>` : ''}
-                            ${item.opcional ? `<p><b class="text-slate-300">Detalle:</b> ${item.opcional}</p>` : ''}
+                            <p><b class="text-muted">Descripci&oacute;n:</b> ${item.descripcion}</p>
+                            <p><b class="text-muted">Categor&iacute;a:</b> ${item.categoria} | <b class="text-muted">Tallas:</b> ${item.tallas}</p>
+                            ${item.prioridad === 'Surtido' ? `<p><b class="text-muted">Gancho:</b> ${item.tipoGancho} | <b class="text-muted">Cantidad:</b> ${item.cantidad}</p>` : ''}
+                            ${item.opcional ? `<p><b class="text-muted">Detalle:</b> ${item.opcional}</p>` : ''}
                         </div>
                     </div>
                 `;
@@ -1993,7 +2100,7 @@
                 `;
             } else {
                 htmlAcciones += `
-                    <button type="button" onclick="cerrarGestionPiso()" class="w-full bg-slate-800 text-slate-200 font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition text-xs border border-slate-700">Cerrar</button>
+                    <button type="button" onclick="cerrarGestionPiso()" class="w-full subcard-box text-title font-semibold py-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition text-xs border">Cerrar</button>
                 `;
             }
 
@@ -2079,8 +2186,8 @@
             let pendientesCount = 0;
 
             if (pedidos.length === 0) {
-                htmlPiso = `<tr><td colspan="5" class="py-4 text-center text-slate-400">No hay solicitudes registradas</td></tr>`;
-                htmlAlmacen = `<tr><td colspan="4" class="py-4 text-center text-slate-400">No hay pedidos pendientes</td></tr>`;
+                htmlPiso = `<tr><td colspan="5" class="py-4 text-center text-muted">No hay solicitudes registradas</td></tr>`;
+                htmlAlmacen = `<tr><td colspan="4" class="py-4 text-center text-muted">No hay pedidos pendientes</td></tr>`;
             } else {
                 const procesadosPiso = new Set();
 
@@ -2091,47 +2198,47 @@
                     if (procesadosPiso.has(idClave)) return;
                     procesadosPiso.add(idClave);
 
-                    let badgeColor = 'bg-slate-800 text-slate-300 border border-slate-700';
+                    let badgeColor = 'subcard-box text-title border';
                     let textoEstado = p.estado;
 
-                    if (p.estado === 'SOLICITADO') { badgeColor = 'bg-amber-950/60 text-amber-300 border border-amber-800/60'; textoEstado = 'Solicitado'; }
-                    if (p.estado === 'NO_HAY') { badgeColor = 'bg-orange-950/60 text-orange-300 border border-orange-800/60'; textoEstado = 'No hay'; }
-                    if (p.estado === 'AGOTADO') { badgeColor = 'bg-red-950/60 text-red-300 border border-red-800/60'; textoEstado = 'Agotado'; }
-                    if (p.estado === 'COMPLETADO') { badgeColor = 'bg-green-950/60 text-green-300 border border-green-800/60'; textoEstado = 'Listo'; }
+                    if (p.estado === 'SOLICITADO') { badgeColor = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'; textoEstado = 'Solicitado'; }
+                    if (p.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-300 dark:border-orange-800/60'; textoEstado = 'No hay'; }
+                    if (p.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800/60'; textoEstado = 'Agotado'; }
+                    if (p.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/60'; textoEstado = 'Listo'; }
 
                     let esUrgenteCliente = p.prioridad === 'Cliente';
-                    let badgePrio = esUrgenteCliente ? 'bg-pink-950/60 text-pink-300 border border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-950/60 text-indigo-300 border border-indigo-800/60';
-                    let claseFilaUrgente = esUrgenteCliente ? 'border-l-4 border-pink-500 bg-pink-950/20' : '';
+                    let badgePrio = esUrgenteCliente ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-300 dark:border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800/60';
+                    let claseFilaUrgente = esUrgenteCliente ? 'border-l-4 border-pink-500 bg-pink-50 dark:bg-pink-950/20' : '';
 
                     if (esGrupo) {
                         const itemsDelGrupo = pedidos.filter(item => item.grupoId === p.grupoId);
                         let todosSolicitados = itemsDelGrupo.every(i => i.estado === 'SOLICITADO');
                         let todosCompletados = itemsDelGrupo.every(i => i.estado === 'COMPLETADO');
                         let textoEstadoGral = todosSolicitados ? 'Solicitado' : (todosCompletados ? 'Listo' : 'En Gesti&oacute;n');
-                        let badgeColorGral = todosSolicitados ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60' : (todosCompletados ? 'bg-green-950/60 text-green-300 border border-green-800/60' : 'bg-purple-950/60 text-purple-300 border border-purple-800/60');
+                        let badgeColorGral = todosSolicitados ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300' : (todosCompletados ? 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300' : 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300');
 
                         htmlPiso += `
-                            <tr class="hover:bg-slate-800/50 cursor-pointer border-l-4 border-purple-500 bg-purple-950/20" onclick="abrirGestionPiso('${p.grupoId}', true)">
-                                <td class="py-3 px-3 font-mono text-xs text-slate-400"><b class="text-white font-bold">${itemsDelGrupo.map(i=>i.codigo).join(', ')}</b><br><span class="text-[10px] font-bold text-blue-400">Por: ${p.vendedor}</span><br><span class="text-[10px] text-slate-400">${p.fecha || ''} ${p.hora}</span></td>
-                                <td class="py-3 px-3 font-medium text-slate-200">
-                                    <span class="text-xs bg-purple-950/60 text-purple-300 border border-purple-800/60 px-2 py-0.5 rounded-full font-bold">&#128221; Lista (${itemsDelGrupo.length} Art&iacute;culos)</span>
+                            <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer border-l-4 border-purple-500 bg-purple-50 dark:bg-purple-950/20" onclick="abrirGestionPiso('${p.grupoId}', true)">
+                                <td class="py-3 px-3 font-mono text-xs text-muted"><b class="text-title font-bold">${itemsDelGrupo.map(i=>i.codigo).join(', ')}</b><br><span class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Por: ${p.vendedor}</span><br><span class="text-[10px] text-muted">${p.fecha || ''} ${p.hora}</span></td>
+                                <td class="py-3 px-3 font-medium text-title">
+                                    <span class="text-xs bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300 dark:border-purple-800/60 px-2 py-0.5 rounded-full font-bold">&#128221; Lista (${itemsDelGrupo.length} Art&iacute;culos)</span>
                                 </td>
                                 <td class="py-3 px-3 text-xs">Tallas: M&uacute;ltiples<br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span></td>
                                 <td class="py-3 px-3"><span class="text-xs px-2.5 py-1 rounded-full font-semibold ${badgeColorGral}">${textoEstadoGral}</span></td>
                                 <td class="py-3 px-3 text-right">
-                                    <span class="text-xs bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-700">Ver Grupo</span>
+                                    <span class="text-xs subcard-box border text-title px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-200 dark:hover:bg-slate-700">Ver Grupo</span>
                                 </td>
                             </tr>
                         `;
                     } else {
                         htmlPiso += `
-                            <tr class="hover:bg-slate-800/50 cursor-pointer ${claseFilaUrgente}" onclick="abrirGestionPiso('${p.id}', false)">
-                                <td class="py-3 px-3 font-mono text-xs text-slate-400"><b class="text-white font-bold">${p.codigo}</b><br><span class="text-[10px] font-bold text-blue-400">Por: ${p.vendedor}</span><br><span class="text-[10px] text-slate-400">${p.fecha || ''} ${p.hora}</span></td>
-                                <td class="py-3 px-3 font-medium text-slate-200">${p.descripcion}</td>
+                            <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer ${claseFilaUrgente}" onclick="abrirGestionPiso('${p.id}', false)">
+                                <td class="py-3 px-3 font-mono text-xs text-muted"><b class="text-title font-bold">${p.codigo}</b><br><span class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Por: ${p.vendedor}</span><br><span class="text-[10px] text-muted">${p.fecha || ''} ${p.hora}</span></td>
+                                <td class="py-3 px-3 font-medium text-title">${p.descripcion}</td>
                                 <td class="py-3 px-3 text-xs">Tallas: <b>${p.tallas}</b><br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span></td>
                                 <td class="py-3 px-3"><span class="text-xs px-2.5 py-1 rounded-full font-semibold ${badgeColor}">${textoEstado}</span></td>
                                 <td class="py-3 px-3 text-right">
-                                    <span class="text-xs bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-700">Ver / Gestionar</span>
+                                    <span class="text-xs subcard-box border text-title px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-200 dark:hover:bg-slate-700">Ver / Gestionar</span>
                                 </td>
                             </tr>
                         `;
@@ -2161,19 +2268,19 @@
 
                     if (esGrupo) {
                         const itemsDelGrupo = pedidos.filter(item => item.grupoId === p.grupoId);
-                        let badgePrio = p.prioridad === 'Cliente' ? 'bg-pink-950/60 text-pink-300 border border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-950/60 text-indigo-300 border border-indigo-800/60';
+                        let badgePrio = p.prioridad === 'Cliente' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-300 dark:border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800/60';
 
                         let todosSolicitados = itemsDelGrupo.every(i => i.estado === 'SOLICITADO');
                         let todosCompletados = itemsDelGrupo.every(i => i.estado === 'COMPLETADO');
                         let textoEstadoGral = todosSolicitados ? 'Solicitado' : (todosCompletados ? 'Listo' : 'En Gesti&oacute;n');
-                        let badgeColorGral = todosSolicitados ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60' : (todosCompletados ? 'bg-green-950/60 text-green-300 border border-green-800/60' : 'bg-purple-950/60 text-purple-300 border border-purple-800/60');
+                        let badgeColorGral = todosSolicitados ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300' : (todosCompletados ? 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300' : 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300');
 
                         htmlAlmacen += `
-                            <tr class="hover:bg-slate-800/50 cursor-pointer border-l-4 border-purple-500 bg-purple-950/20" onclick="abrirGestionAlmacen('${p.grupoId}', true)">
-                                <td class="py-3 px-3 font-mono text-xs text-slate-400"><b>${p.vendedor}</b> ${luzVendedor}<br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span><br><span class="text-[10px] text-slate-400">${p.fecha || ''} ${p.hora}</span></td>
-                                <td class="py-3 px-3 font-medium text-slate-200">
-                                    <span class="text-xs bg-purple-950/60 text-purple-300 border border-purple-800/60 px-2 py-0.5 rounded-full font-bold">&#128221; Lista (${itemsDelGrupo.length} Art&iacute;culos)</span><br>
-                                    <span class="text-[11px] text-slate-400">${itemsDelGrupo.map(i => i.codigo).join(', ')}</span>
+                            <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer border-l-4 border-purple-500 bg-purple-50 dark:bg-purple-950/20" onclick="abrirGestionAlmacen('${p.grupoId}', true)">
+                                <td class="py-3 px-3 font-mono text-xs text-muted"><b>${p.vendedor}</b> ${luzVendedor}<br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span><br><span class="text-[10px] text-muted">${p.fecha || ''} ${p.hora}</span></td>
+                                <td class="py-3 px-3 font-medium text-title">
+                                    <span class="text-xs bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300 dark:border-purple-800/60 px-2 py-0.5 rounded-full font-bold">&#128221; Lista (${itemsDelGrupo.length} Art&iacute;culos)</span><br>
+                                    <span class="text-[11px] text-muted">${itemsDelGrupo.map(i => i.codigo).join(', ')}</span>
                                 </td>
                                 <td class="py-3 px-3"><span class="text-xs px-2.5 py-1 rounded-full font-semibold ${badgeColorGral}">${textoEstadoGral}</span></td>
                                 <td class="py-3 px-3 text-right">
@@ -2185,25 +2292,25 @@
                             </tr>
                         `;
                     } else {
-                        let badgeColor = 'bg-slate-800 text-slate-300 border border-slate-700';
+                        let badgeColor = 'subcard-box text-title border';
                         let textoEstado = p.estado;
 
-                        if (p.estado === 'SOLICITADO') { badgeColor = 'bg-amber-950/60 text-amber-300 border border-amber-800/60'; textoEstado = 'Solicitado'; }
-                        if (p.estado === 'NO_HAY') { badgeColor = 'bg-orange-950/60 text-orange-300 border border-orange-800/60'; textoEstado = 'No hay'; }
-                        if (p.estado === 'AGOTADO') { badgeColor = 'bg-red-950/60 text-red-300 border border-red-800/60'; textoEstado = 'Agotado'; }
-                        if (p.estado === 'COMPLETADO') { badgeColor = 'bg-green-950/60 text-green-300 border border-green-800/60'; textoEstado = 'Listo'; }
+                        if (p.estado === 'SOLICITADO') { badgeColor = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'; textoEstado = 'Solicitado'; }
+                        if (p.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-300 dark:border-orange-800/60'; textoEstado = 'No hay'; }
+                        if (p.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800/60'; textoEstado = 'Agotado'; }
+                        if (p.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/60'; textoEstado = 'Listo'; }
 
                         let esUrgenteCliente = p.prioridad === 'Cliente';
-                        let badgePrio = esUrgenteCliente ? 'bg-pink-950/60 text-pink-300 border border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-950/60 text-indigo-300 border border-indigo-800/60';
+                        let badgePrio = esUrgenteCliente ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-300 dark:border-pink-800/60 font-bold animate-pulse' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800/60';
 
                         htmlAlmacen += `
-                            <tr class="hover:bg-slate-800/50 cursor-pointer" onclick="abrirGestionAlmacen('${p.id}', false)">
-                                <td class="py-3 px-3 font-mono text-xs text-slate-400"><b>${p.vendedor}</b> ${luzVendedor}<br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span><br><span class="text-[10px] text-slate-400">${p.fecha || ''} ${p.hora}</span></td>
-                                <td class="py-3 px-3 font-medium text-slate-200"><span class="text-sm font-bold text-blue-400">${p.codigo}</span><br><span class="text-xs text-slate-400">${p.descripcion}</span></td>
+                            <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer" onclick="abrirGestionAlmacen('${p.id}', false)">
+                                <td class="py-3 px-3 font-mono text-xs text-muted"><b>${p.vendedor}</b> ${luzVendedor}<br><span class="px-1.5 py-0.5 rounded text-xs ${badgePrio}">${p.prioridad}</span><br><span class="text-[10px] text-muted">${p.fecha || ''} ${p.hora}</span></td>
+                                <td class="py-3 px-3 font-medium text-title"><span class="text-sm font-bold text-blue-600 dark:text-blue-400">${p.codigo}</span><br><span class="text-xs text-muted">${p.descripcion}</span></td>
                                 <td class="py-3 px-3"><span class="text-xs px-2.5 py-1 rounded-full font-semibold ${badgeColor}">${textoEstado}</span></td>
                                 <td class="py-3 px-3 text-right">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <span class="text-xs bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-700">Gestionar</span>
+                                        <span class="text-xs subcard-box border text-title px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-200 dark:hover:bg-slate-700">Gestionar</span>
                                         <button type="button" onclick="event.stopPropagation(); eliminarPedidoDirectoAlmacen('${p.id}', false)" class="bg-red-600 text-white hover:bg-red-700 px-2 py-1.5 rounded-lg text-xs font-bold shadow" title="Borrar pedido">&#10005;</button>
                                     </div>
                                 </td>
@@ -2216,7 +2323,7 @@
             if (usuarioActual === 'piso' && tablaPiso) {
                 tablaPiso.innerHTML = htmlPiso;
             } else if (usuarioActual === 'almacen' && tablaAlmacen) {
-                tablaAlmacen.innerHTML = htmlAlmacen || `<tr><td colspan="4" class="py-4 text-center text-slate-400">No se encontraron pedidos con este filtro</td></tr>`;
+                tablaAlmacen.innerHTML = htmlAlmacen || `<tr><td colspan="4" class="py-4 text-center text-muted">No se encontraron pedidos con este filtro</td></tr>`;
                 if (contadorPendientes) contadorPendientes.innerText = `${pendientesCount} pendientes`;
             }
         }
