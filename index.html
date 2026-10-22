@@ -348,7 +348,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                 <div>
                     <h2 class="text-lg font-bold text-title">&#128230; Panel de Almacen (Gestion General)</h2>
-                    <p class="text-xs text-muted">Administra pedidos, catálogo de referencias y accesos.</p>
+                    <p class="text-xs text-muted">Administra pedidos, catálogo de referencias, accesos y estadísticas.</p>
                 </div>
                 <span id="contador-pendientes" class="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/50 text-xs font-semibold px-3 py-1.5 rounded-full">0 pendientes</span>
             </div>
@@ -377,6 +377,43 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-almacen" class="text-sm divide-y">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN: TOP DE SURTIDO (NUEVO / RESTAURADO) -->
+            <div id="seccion-almacen-top" class="hidden space-y-4">
+                <div class="subcard-box p-4 rounded-xl border flex flex-col md:flex-row justify-between items-center gap-3">
+                    <div>
+                        <h3 class="font-bold text-title text-sm">&#128202; Top de Surtido (Más y Menos Pedidos)</h3>
+                        <p class="text-xs text-muted">Análisis estadístico de rotación de artículos en inventario.</p>
+                    </div>
+                    <div class="flex gap-2 flex-wrap w-full md:w-auto">
+                        <select id="top-tipo" onchange="renderizarTopSurtido()" class="px-3 py-1.5 border rounded-lg text-xs font-semibold focus:outline-none">
+                            <option value="mas">Más Pedidos (Top 10)</option>
+                            <option value="menos">Menos Pedidos (Top 10)</option>
+                        </select>
+                        <select id="top-tiempo" onchange="renderizarTopSurtido()" class="px-3 py-1.5 border rounded-lg text-xs font-semibold focus:outline-none">
+                            <option value="7">Últimos 7 días</option>
+                            <option value="15">Últimos 15 días</option>
+                            <option value="30">Último mes (30 días)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b text-xs uppercase text-muted font-semibold subcard-box">
+                                <th class="py-3 px-3">#</th>
+                                <th class="py-3 px-3">Código</th>
+                                <th class="py-3 px-3">Descripción</th>
+                                <th class="py-3 px-3">Categoría</th>
+                                <th class="py-3 px-3 text-right">Total Solicitudes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-top-surtido" class="text-sm divide-y">
                         </tbody>
                     </table>
                 </div>
@@ -686,7 +723,7 @@
         let listaCatalogo = [];
         let mapaVendedoresEstado = {};
         let modoEscannerActual = 'piso';
-        let filtroCategoriaCatalogo = 'TODOS'; // Variable para filtro rápido de categoría
+        let filtroCategoriaCatalogo = 'TODOS';
         
         let listaTemporalVendedor = [];
         const borradorGuardado = localStorage.getItem('surty_borrador');
@@ -799,7 +836,6 @@
             }, 250);
         }
 
-        // FUNCIÓN PARA FILTRAR POR CATEGORÍA EN EL CATÁLOGO
         function filtrarCategoriaCatalogo(cat) {
             filtroCategoriaCatalogo = cat;
             const pills = ['TODOS', 'Dama', 'Caballero', 'Niño', 'Hogar', 'Intimo'];
@@ -835,6 +871,9 @@
                     opcionesMenu.innerHTML = `
                         <button type="button" onclick="seleccionarOpcionMenu('pedidos-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128230; Pedidos
+                        </button>
+                        <button type="button" onclick="seleccionarOpcionMenu('top-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
+                            &#128202; Top de Surtido
                         </button>
                         <button type="button" onclick="seleccionarOpcionMenu('catalogo-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128218; Catálogo (Productos Guardados)
@@ -891,6 +930,8 @@
                 abrirModalTablaPiso();
             } else if (opcion === 'pedidos-almacen') {
                 cambiarTabAlmacen('pedidos');
+            } else if (opcion === 'top-almacen') {
+                cambiarTabAlmacen('top');
             } else if (opcion === 'catalogo-almacen') {
                 cambiarTabAlmacen('catalogo');
             } else if (opcion === 'vendedores-almacen') {
@@ -986,21 +1027,99 @@
 
         function cambiarTabAlmacen(tab) {
             const secPedidos = document.getElementById('seccion-almacen-pedidos');
+            const secTop = document.getElementById('seccion-almacen-top');
             const secCatalogo = document.getElementById('seccion-almacen-catalogo');
             const secVendedores = document.getElementById('seccion-almacen-vendedores');
 
-            [secPedidos, secCatalogo, secVendedores].forEach(s => {
+            [secPedidos, secTop, secCatalogo, secVendedores].forEach(s => {
                 if(s) s.classList.add('hidden');
             });
 
             if (tab === 'pedidos') {
                 if(secPedidos) secPedidos.classList.remove('hidden');
+            } else if (tab === 'top') {
+                if(secTop) secTop.classList.remove('hidden');
+                renderizarTopSurtido();
             } else if (tab === 'catalogo') {
                 if(secCatalogo) secCatalogo.classList.remove('hidden');
                 renderizarTablaCatalogo();
             } else if (tab === 'vendedores') {
                 if(secVendedores) secVendedores.classList.remove('hidden');
             }
+        }
+
+        function renderizarTopSurtido() {
+            const tbody = document.getElementById('tabla-top-surtido');
+            if (!tbody) return;
+
+            const tipo = document.getElementById('top-tipo') ? document.getElementById('top-tipo').value : 'mas';
+            const dias = parseInt(document.getElementById('top-tiempo') ? document.getElementById('top-tiempo').value : '7', 10);
+            
+            const ahora = Date.now();
+            const limiteTiempo = ahora - (dias * 24 * 60 * 60 * 1000);
+
+            const pedidosFiltrados = pedidos.filter(p => p.timestamp >= limiteTiempo);
+
+            const conteo = {};
+            pedidosFiltrados.forEach(p => {
+                const cod = p.codigo || 'S/C';
+                if (!conteo[cod]) {
+                    conteo[cod] = {
+                        codigo: cod,
+                        descripcion: p.descripcion || 'Sin descripción',
+                        categoria: p.categoria || 'N/A',
+                        total: 0
+                    };
+                }
+                conteo[cod].total += 1;
+            });
+
+            let listaItems = Object.values(conteo);
+
+            if (tipo === 'menos') {
+                listaCatalogo.forEach(cat => {
+                    if (!conteo[cat.codigo]) {
+                        listaItems.push({
+                            codigo: cat.codigo,
+                            descripcion: cat.descripcion,
+                            categoria: cat.categoria,
+                            total: 0
+                        });
+                    }
+                });
+            }
+
+            listaItems.sort((a, b) => {
+                if (tipo === 'mas') {
+                    return b.total - a.total;
+                } else {
+                    return a.total - b.total;
+                }
+            });
+
+            const top10 = listaItems.slice(0, 10);
+
+            if (top10.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-muted">No hay registros suficientes para este periodo</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            top10.forEach((item, index) => {
+                let badgeColor = tipo === 'mas' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300';
+                html += `
+                    <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                        <td class="py-3 px-3 font-bold text-muted">${index + 1}</td>
+                        <td class="py-3 px-3 font-mono font-bold text-blue-600 dark:text-blue-400 text-xs">${item.codigo}</td>
+                        <td class="py-3 px-3 font-medium text-title text-xs">${item.descripcion}</td>
+                        <td class="py-3 px-3"><span class="subcard-box text-title text-[10px] px-1.5 py-0.5 rounded-full font-semibold border">${item.categoria}</span></td>
+                        <td class="py-3 px-3 text-right">
+                            <span class="text-xs px-2.5 py-1 rounded-full font-bold ${badgeColor}">${item.total} solicitudes</span>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
         }
 
         function iniciarEscuchaCatalogo() {
@@ -1120,13 +1239,11 @@
             const filtroTexto = document.getElementById('busqueda-catalogo') ? document.getElementById('busqueda-catalogo').value.toLowerCase().trim() : '';
             
             const filtrados = listaCatalogo.filter(item => {
-                // Filtrar por categoría seleccionada
                 if (filtroCategoriaCatalogo !== 'TODOS') {
                     if (!item.categoria || item.categoria.toLowerCase() !== filtroCategoriaCatalogo.toLowerCase()) {
                         return false;
                     }
                 }
-                // Filtrar por texto escrito
                 if (filtroTexto) {
                     const coincide = item.codigo.toLowerCase().includes(filtroTexto) || 
                                      item.descripcion.toLowerCase().includes(filtroTexto) ||
