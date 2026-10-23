@@ -65,8 +65,11 @@
         .text-title {
             color: #0F172A !important;
         }
+        table tr {
+            background-color: transparent !important;
+        }
 
-        /* ESTILOS MODO OSCURO (Opcional) */
+        /* ESTILOS MODO OSCURO MEJORADOS */
         body.dark-mode {
             background-color: #0B1329 !important;
             color: #F8FAFC !important;
@@ -101,6 +104,16 @@
         body.dark-mode .text-title {
             color: #FFFFFF !important;
         }
+        body.dark-mode table tr {
+            background-color: transparent !important;
+            color: #F8FAFC !important;
+        }
+        body.dark-mode table tr:hover {
+            background-color: #1E293B !important;
+        }
+        body.dark-mode th, body.dark-mode td {
+            border-color: #334155 !important;
+        }
 
         #reader video {
             width: 100% !important;
@@ -127,6 +140,73 @@
             <p id="texto-notif" class="text-sm">Mensaje aqui</p>
         </div>
         <button onclick="ocultarNotificacion()" class="text-slate-400 hover:text-white ml-2 font-bold">&#10005;</button>
+    </div>
+
+    <!-- MODAL DE ALERTA URGENTE DE CLIENTE (LATIDO) -->
+    <div id="modal-alerta-cliente" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="card-box rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 relative border-2 border-pink-500 animate-pulse">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🚨</span>
+                    <h3 class="font-black text-title text-xl text-pink-600 dark:text-pink-400 uppercase tracking-wider">¡CLIENTE!</h3>
+                </div>
+                <button type="button" onclick="cerrarModalAlertaCliente()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-xl p-1" title="Cerrar sin marcar">&#10005;</button>
+            </div>
+            <div id="contenido-alerta-cliente" class="space-y-2 text-sm text-title"></div>
+            <div class="pt-2">
+                <button type="button" id="btn-atender-cliente" onclick="atenderClienteDesdeAlerta()" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-xl transition shadow text-sm">
+                    Atendiendo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LECTURA DE MENSAJE DETALLADO (ALMACÉN) -->
+    <div id="modal-detalle-mensaje" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="card-box rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 relative border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-title text-lg flex items-center gap-2">💬 Aviso de Vendedor</h3>
+                <button type="button" onclick="cerrarModalDetalleMensaje()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
+            </div>
+            <div id="contenido-detalle-mensaje" class="space-y-3 text-sm text-title"></div>
+            <div class="border-t pt-3 flex gap-2">
+                <button type="button" id="btn-atender-mensaje-modal" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl transition text-xs shadow">Marcar Recibido</button>
+                <button type="button" onclick="cerrarModalDetalleMensaje()" class="subcard-box border text-title font-semibold px-4 py-2.5 rounded-xl text-xs hover:bg-slate-200 dark:hover:bg-slate-700">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MIS AVISOS ENVIADOS (PISO DE VENTA) -->
+    <div id="modal-mis-avisos" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="card-box rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative max-h-[90vh] overflow-y-auto border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-title text-lg flex items-center gap-2">📬 Mis Avisos y Estado en Almacén</h3>
+                <button type="button" onclick="cerrarModalMisAvisos()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
+            </div>
+            <p class="text-xs text-muted">Aquí puedes ver si Almacén ya leyó y marcó como recibido tu aviso o suministro.</p>
+            <div id="contenido-mis-avisos" class="space-y-3"></div>
+            <div class="border-t pt-3 flex justify-end">
+                <button type="button" onclick="cerrarModalMisAvisos()" class="subcard-box border text-title font-semibold px-4 py-2 rounded-xl text-xs hover:bg-slate-200 dark:hover:bg-slate-700">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE MENSAJE / SUMINISTRO RÁPIDO (DESDE PISO) -->
+    <div id="modal-mensaje-general" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="card-box rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 relative border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-title text-lg flex items-center gap-2">💬 Enviar Aviso a Almacén</h3>
+                <button type="button" onclick="cerrarModalMensajeGeneral()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-lg">&#10005;</button>
+            </div>
+            <p class="text-xs text-muted">Solicita suministros rápidos (bolsas de basura, escoba, ganchos de repuesto, etc.) sin crear un pedido de mercancía.</p>
+            <form onsubmit="enviarMensajeGeneral(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-muted mb-1">¿Qué necesitas o qué aviso hay?</label>
+                    <textarea id="texto-mensaje-general" rows="3" required placeholder="Ej. Necesitamos bolsas de basura, escoba nueva o ganchos de madera..." class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700 transition text-sm shadow">Enviar Aviso a Almacén</button>
+            </form>
+        </div>
     </div>
 
     <!-- MENÚ LATERAL (DRAWER) -->
@@ -208,9 +288,18 @@
     <div id="app-principal" class="max-w-3xl mx-auto hidden">
         <header class="card-box shadow rounded-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4 border">
             <div class="flex items-center gap-3">
-                <button type="button" onclick="abrirMenuLateral()" class="p-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-white transition shadow flex items-center justify-center font-bold text-lg" title="Abrir Menú">
-                    &#9776;
-                </button>
+                <!-- BOTÓN MENÚ CON BADGES DE CONTADORES SUPERIORES -->
+                <div class="relative">
+                    <button type="button" onclick="abrirMenuLateral()" class="p-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-white transition shadow flex items-center justify-center font-bold text-lg" title="Abrir Menú">
+                        &#9776;
+                    </button>
+                    <!-- Contadores superpuestos al menú -->
+                    <div id="contenedor-badges-header" class="absolute -top-2 -right-3 flex gap-1 z-10 pointer-events-none">
+                        <span id="badge-header-pedidos" class="hidden bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-white dark:border-slate-800 animate-pulse" title="Pedidos pendientes">0📦</span>
+                        <span id="badge-header-mensajes" class="hidden bg-pink-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-white dark:border-slate-800 animate-pulse" title="Avisos pendientes">0💬</span>
+                    </div>
+                </div>
+
                 <div class="w-12">
                     <svg viewBox="0 0 500 450" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
                         <path d="M 100 310 C 100 380 230 380 230 310 L 230 180 C 230 110 150 110 150 160 C 150 200 230 200 230 240 L 230 310" stroke="#1d4ed8" stroke-width="45" stroke-linecap="round" stroke-linejoin="round"/>
@@ -218,8 +307,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-title" id="titulo-panel">Control de Tienda - SURTY</h1>
-                    <p class="text-sm text-muted" id="info-usuario">Sesion activa</p>
+                    <h1 class="text-xl md:text-2xl font-bold text-title" id="titulo-panel">Control de Tienda - SURTY</h1>
+                    <p class="text-xs md:text-sm text-muted" id="info-usuario">Sesion activa</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
@@ -261,8 +350,8 @@
 
                             <div class="flex gap-2">
                                 <input type="text" id="codigo" required autocomplete="off" placeholder="Ej. A-102" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <button type="button" onclick="buscarReferenciaCatalogo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-lg transition flex items-center justify-center shadow" title="Buscar referencia">
-                                    🔍
+                                <button type="button" onclick="limpiarFormularioPiso()" class="bg-red-500 hover:bg-red-600 text-white px-3.5 py-2 rounded-lg transition flex items-center justify-center shadow font-bold text-sm" title="Borrar datos ingresados">
+                                    ✕
                                 </button>
                                 <button type="button" onclick="abrirScanner()" class="bg-slate-800 hover:bg-slate-900 text-white px-3.5 py-2 rounded-lg transition flex items-center justify-center shadow" title="Escanear con cámara">
                                     📷
@@ -348,7 +437,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                 <div>
                     <h2 class="text-lg font-bold text-title">&#128230; Panel de Almacen (Gestion General)</h2>
-                    <p class="text-xs text-muted">Administra pedidos, catálogo de referencias, accesos y estadísticas.</p>
+                    <p class="text-xs text-muted">Administra pedidos, catálogo de referencias y avisos generales.</p>
                 </div>
                 <span id="contador-pendientes" class="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/50 text-xs font-semibold px-3 py-1.5 rounded-full">0 pendientes</span>
             </div>
@@ -359,7 +448,7 @@
                     <div class="flex gap-2 flex-wrap w-full md:w-auto">
                         <button type="button" onclick="filtrarAlmacen('TODOS')" id="btn-filtro-todos" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow">Todos</button>
                         <button type="button" onclick="filtrarAlmacen('SOLICITADO')" id="btn-filtro-solicitado" class="px-3 py-1.5 rounded-lg text-xs font-bold subcard-box border text-muted hover:bg-slate-200 dark:hover:bg-slate-700">Pendientes</button>
-                        <button type="button" onclick="filtrarAlmacen('EN_PREPARACION')" id="btn-filtro-preparacion" class="px-3 py-1.5 rounded-lg text-xs font-bold subcard-box border text-muted hover:bg-slate-200 dark:hover:bg-slate-700">En Preparacion</button>
+                        <button type="button" onclick="filtrarAlmacen('COMPLETADO')" id="btn-filtro-listos" class="px-3 py-1.5 rounded-lg text-xs font-bold subcard-box border text-muted hover:bg-slate-200 dark:hover:bg-slate-700">Listos</button>
                     </div>
                     <div class="w-full md:w-72">
                         <input type="text" id="busqueda-almacen" oninput="renderizarTablas()" placeholder="Buscar codigo, vendedor o descripcion..." class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -382,38 +471,21 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN: TOP DE SURTIDO (NUEVO / RESTAURADO) -->
-            <div id="seccion-almacen-top" class="hidden space-y-4">
-                <div class="subcard-box p-4 rounded-xl border flex flex-col md:flex-row justify-between items-center gap-3">
-                    <div>
-                        <h3 class="font-bold text-title text-sm">&#128202; Top de Surtido (Más y Menos Pedidos)</h3>
-                        <p class="text-xs text-muted">Análisis estadístico de rotación de artículos en inventario.</p>
-                    </div>
-                    <div class="flex gap-2 flex-wrap w-full md:w-auto">
-                        <select id="top-tipo" onchange="renderizarTopSurtido()" class="px-3 py-1.5 border rounded-lg text-xs font-semibold focus:outline-none">
-                            <option value="mas">Más Pedidos (Top 10)</option>
-                            <option value="menos">Menos Pedidos (Top 10)</option>
-                        </select>
-                        <select id="top-tiempo" onchange="renderizarTopSurtido()" class="px-3 py-1.5 border rounded-lg text-xs font-semibold focus:outline-none">
-                            <option value="7">Últimos 7 días</option>
-                            <option value="15">Últimos 15 días</option>
-                            <option value="30">Último mes (30 días)</option>
-                        </select>
-                    </div>
+            <!-- SECCIÓN: MENSAJES / SUMINISTROS (ALMACÉN) -->
+            <div id="seccion-almacen-mensajes" class="hidden space-y-4">
+                <div class="flex justify-between items-center subcard-box p-3 rounded-xl border">
+                    <h3 class="font-bold text-title text-xs uppercase">💬 Avisos y Suministros Solicitados por Vendedores</h3>
                 </div>
-
-                <div class="overflow-x-auto rounded-lg border">
+                <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b text-xs uppercase text-muted font-semibold subcard-box">
-                                <th class="py-3 px-3">#</th>
-                                <th class="py-3 px-3">Código</th>
-                                <th class="py-3 px-3">Descripción</th>
-                                <th class="py-3 px-3">Categoría</th>
-                                <th class="py-3 px-3 text-right">Total Solicitudes</th>
+                            <tr class="border-b text-xs uppercase text-muted font-semibold">
+                                <th class="py-3 px-3">Vendedor / Hora</th>
+                                <th class="py-3 px-3">Mensaje / Suministro</th>
+                                <th class="py-3 px-3 text-right">Acción</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-top-surtido" class="text-sm divide-y">
+                        <tbody id="tabla-mensajes-almacen" class="text-sm divide-y">
                         </tbody>
                     </table>
                 </div>
@@ -421,18 +493,15 @@
 
             <!-- SECCIÓN: CATÁLOGO COMPACTO Y FILTROS RÁPIDOS -->
             <div id="seccion-almacen-catalogo" class="hidden space-y-3">
-                
-                <!-- Botón Toggle de Registro de Referencia -->
                 <div class="flex justify-between items-center">
                     <button type="button" onclick="toggleFormularioCatalogo()" id="btn-toggle-registro" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow flex items-center justify-between">
-                        <span id="texto-btn-toggle">+ Agregar Nueva Referencia al Catálogo</span>
+                        <span id="texto-btn-toggle">+ Agregar / Editar Referencia en Catálogo</span>
                         <span id="icono-btn-toggle" class="text-base">&#9660;</span>
                     </button>
                 </div>
 
-                <!-- Formulario Plegable -->
                 <div id="formulario-registro-catalogo" class="hidden subcard-box p-4 rounded-xl border shadow-inner transition-all duration-300">
-                    <h3 class="font-bold text-title text-xs uppercase mb-3 flex items-center gap-1.5">
+                    <h3 class="font-bold text-title text-xs uppercase mb-3 flex items-center gap-1.5" id="titulo-form-catalogo">
                         <span>&#128218;</span> Registrar Nueva Referencia
                     </h3>
                     <form onsubmit="guardarEnCatalogo(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -448,12 +517,11 @@
                             <option value="Hogar">Hogar</option>
                             <option value="Intimo">Intimo</option>
                         </select>
-                        <button type="submit" class="bg-green-600 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-green-700 transition shadow">Guardar Referencia</button>
+                        <button type="submit" id="btn-guardar-cat" class="bg-green-600 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-green-700 transition shadow">Guardar Referencia</button>
                     </form>
                 </div>
 
-                <!-- Buscador Fijo (Sticky) con Filtros de Categoría -->
-                <div id="contenedor-busqueda-catalogo" class="sticky top-0 z-20 card-box p-2.5 rounded-xl shadow-md border space-y-2">
+                <div id="contenedor-busqueda-catalogo" class="sticky top-0 z-25 card-box p-2.5 rounded-xl shadow-md border space-y-2">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-[11px] text-muted uppercase">Referencias Registradas</h4>
                     </div>
@@ -463,7 +531,6 @@
                             📷
                         </button>
                     </div>
-                    <!-- Botones de Filtro Rápido por Categoría -->
                     <div class="flex gap-1 overflow-x-auto pb-1 text-[11px]">
                         <button type="button" onclick="filtrarCategoriaCatalogo('TODOS')" id="cat-pill-todos" class="px-2.5 py-1 rounded-full font-bold bg-blue-600 text-white whitespace-nowrap shadow-sm">Todos</button>
                         <button type="button" onclick="filtrarCategoriaCatalogo('Dama')" id="cat-pill-dama" class="px-2.5 py-1 rounded-full font-semibold subcard-box border text-title whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700">Dama</button>
@@ -474,7 +541,6 @@
                     </div>
                 </div>
 
-                <!-- Tabla Ampliada con Alto Máximo Flexible -->
                 <div class="overflow-x-auto max-h-[60vh] overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -692,7 +758,6 @@
         try {
             if (firebase.messaging.isSupported()) {
                 messaging = firebase.messaging();
-                
                 if ('Notification' in window) {
                     Notification.requestPermission().then((permission) => {
                         if (permission === 'granted') {
@@ -700,37 +765,31 @@
                                 messaging.getToken({ 
                                     serviceWorkerRegistration: registration,
                                     vapidKey: '' 
-                                }).then((currentToken) => {
-                                    if (currentToken) {
-                                        console.log('Token FCM obtenido con éxito.');
-                                    }
-                                }).catch((err) => console.log('No se pudo obtener token FCM:', err));
+                                }).then((currentToken) => {}).catch((err) => {});
                             });
                         }
                     });
                 }
             }
-        } catch(e) {
-            console.log('FCM no soportado en este entorno.');
-        }
+        } catch(e) {}
 
         let usuarioActual = null;
         let nombreVendedor = '';
         let idUsuarioActualPiso = '';
         let heartbeatTimer = null;
         let pedidos = [];
+        let listaMensajesGeneral = [];
         let listaVendedores = [];
         let listaCatalogo = [];
         let mapaVendedoresEstado = {};
         let modoEscannerActual = 'piso';
         let filtroCategoriaCatalogo = 'TODOS';
+        let idPedidoClienteActivo = null;
         
         let listaTemporalVendedor = [];
         const borradorGuardado = localStorage.getItem('surty_borrador');
         if (borradorGuardado) {
-            try {
-                listaTemporalVendedor = JSON.parse(borradorGuardado);
-            } catch(e) {}
+            try { listaTemporalVendedor = JSON.parse(borradorGuardado); } catch(e) {}
         }
 
         let tallasSeleccionadas = [];
@@ -749,6 +808,7 @@
 
             actualizarUIListaTemporal();
             iniciarEscuchaCatalogo();
+            iniciarEscuchaMensajesGenerales();
             configurarAutocompletadoCodigo();
 
             const sesionGuardada = localStorage.getItem('surty_sesion');
@@ -821,7 +881,7 @@
                 }, 100);
             } else {
                 form.classList.add('hidden');
-                txt.innerText = "+ Agregar Nueva Referencia al Catálogo";
+                txt.innerText = "+ Agregar / Editar Referencia en Catálogo";
                 ico.innerHTML = "&#9660;";
                 btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow flex items-center justify-between";
             }
@@ -830,9 +890,7 @@
         function scrollEnfoqueBuscador() {
             setTimeout(() => {
                 const contenedor = document.getElementById('contenedor-busqueda-catalogo');
-                if (contenedor) {
-                    contenedor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
+                if (contenedor) contenedor.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 250);
         }
 
@@ -851,7 +909,6 @@
                     }
                 }
             });
-
             renderizarTablaCatalogo();
         }
 
@@ -869,11 +926,13 @@
                 if (tituloMenu) tituloMenu.innerText = 'ALMACÉN';
                 if (opcionesMenu) {
                     opcionesMenu.innerHTML = `
-                        <button type="button" onclick="seleccionarOpcionMenu('pedidos-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
-                            &#128230; Pedidos
+                        <button type="button" onclick="seleccionarOpcionMenu('pedidos-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center justify-between transition">
+                            <span>&#128230; Pedidos</span>
+                            <span id="badge-menu-pedidos" class="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold hidden">0</span>
                         </button>
-                        <button type="button" onclick="seleccionarOpcionMenu('top-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
-                            &#128202; Top de Surtido
+                        <button type="button" onclick="seleccionarOpcionMenu('mensajes-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center justify-between transition">
+                            <span>💬 Mensajes / Suministros</span>
+                            <span id="badge-mensajes-menu" class="hidden bg-pink-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
                         </button>
                         <button type="button" onclick="seleccionarOpcionMenu('catalogo-almacen')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128218; Catálogo (Productos Guardados)
@@ -882,6 +941,7 @@
                             &#128100; Vendedores
                         </button>
                     `;
+                    actualizarBadgesContadores();
                 }
             } else {
                 if (tituloMenu) tituloMenu.innerText = 'PISO DE VENTA';
@@ -892,6 +952,12 @@
                         </button>
                         <button type="button" onclick="seleccionarOpcionMenu('cliente')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128100; Cliente
+                        </button>
+                        <button type="button" onclick="seleccionarOpcionMenu('mensaje-general')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
+                            💬 Enviar Mensaje / Suministro
+                        </button>
+                        <button type="button" onclick="seleccionarOpcionMenu('mis-avisos')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
+                            📬 Mis Avisos y Estado
                         </button>
                         <button type="button" onclick="seleccionarOpcionMenu('estado')" class="w-full text-left subcard-box border text-title p-3.5 rounded-xl font-semibold flex items-center gap-3 transition">
                             &#128221; Estado de Solicitudes
@@ -911,31 +977,275 @@
             const cuerpo = document.getElementById('cuerpo-formulario-pedido');
             
             if (opcion === 'surtido') {
-                if (cuerpo && cuerpo.classList.contains('hidden')) {
-                    toggleFormularioPedido();
-                }
+                if (cuerpo && cuerpo.classList.contains('hidden')) toggleFormularioPedido();
                 document.getElementById('prioridad').value = 'Surtido';
                 document.getElementById('display-prioridad').innerText = 'Surtido';
                 actualizarVistaPrioridad();
                 cuerpo.scrollIntoView({ behavior: 'smooth' });
             } else if (opcion === 'cliente') {
-                if (cuerpo && cuerpo.classList.contains('hidden')) {
-                    toggleFormularioPedido();
-                }
+                if (cuerpo && cuerpo.classList.contains('hidden')) toggleFormularioPedido();
                 document.getElementById('prioridad').value = 'Cliente';
                 document.getElementById('display-prioridad').innerText = 'Cliente';
                 actualizarVistaPrioridad();
                 cuerpo.scrollIntoView({ behavior: 'smooth' });
+            } else if (opcion === 'mensaje-general') {
+                abrirModalMensajeGeneral();
+            } else if (opcion === 'mis-avisos') {
+                abrirModalMisAvisos();
             } else if (opcion === 'estado') {
                 abrirModalTablaPiso();
             } else if (opcion === 'pedidos-almacen') {
                 cambiarTabAlmacen('pedidos');
-            } else if (opcion === 'top-almacen') {
-                cambiarTabAlmacen('top');
+            } else if (opcion === 'mensajes-almacen') {
+                cambiarTabAlmacen('mensajes');
             } else if (opcion === 'catalogo-almacen') {
                 cambiarTabAlmacen('catalogo');
             } else if (opcion === 'vendedores-almacen') {
                 cambiarTabAlmacen('vendedores');
+            }
+        }
+
+        function abrirModalMensajeGeneral() {
+            document.getElementById('texto-mensaje-general').value = '';
+            document.getElementById('modal-mensaje-general').classList.remove('hidden');
+        }
+
+        function cerrarModalMensajeGeneral() {
+            document.getElementById('modal-mensaje-general').classList.add('hidden');
+        }
+
+        function abrirModalMisAvisos() {
+            const contenedor = document.getElementById('contenido-mis-avisos');
+            if (!contenedor) return;
+
+            const misAvisos = listaMensajesGeneral.filter(m => m.vendedor === nombreVendedor);
+
+            if (misAvisos.length === 0) {
+                contenedor.innerHTML = `<p class="text-xs text-muted text-center py-6">No has enviado ningún aviso o suministro reciente.</p>`;
+            } else {
+                let html = '';
+                misAvisos.forEach(m => {
+                    let estado = m.estado || 'PENDIENTE';
+                    let badgeEstado = estado === 'RECIBIDO'
+                        ? `<span class="bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-300 border border-green-300 text-[10px] px-2 py-0.5 rounded-full font-bold">¡Recibido por Almacén! ✅</span>`
+                        : `<span class="bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold">Pendiente en Almacén ⏳</span>`;
+
+                    html += `
+                        <div class="subcard-box p-3.5 rounded-xl border space-y-2">
+                            <div class="flex justify-between items-center border-b pb-1.5">
+                                <span class="text-[10px] text-muted">${m.fecha || ''} ${m.hora}</span>
+                                <div>${badgeEstado}</div>
+                            </div>
+                            <p class="text-xs font-semibold text-title leading-relaxed">${m.texto}</p>
+                            <div class="flex justify-end pt-1">
+                                <button type="button" onclick="eliminarMensajeGeneral('${m.id}'); cerrarModalMisAvisos();" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-[11px] font-semibold shadow">Borrar Aviso</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                contenedor.innerHTML = html;
+            }
+
+            document.getElementById('modal-mis-avisos').classList.remove('hidden');
+        }
+
+        function cerrarModalMisAvisos() {
+            document.getElementById('modal-mis-avisos').classList.add('hidden');
+        }
+
+        function enviarMensajeGeneral(e) {
+            e.preventDefault();
+            const texto = document.getElementById('texto-mensaje-general').value.trim();
+            if (!texto) return;
+
+            const fechaActual = new Date().toLocaleDateString();
+            const horaActual = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            db.collection('mensajes').add({
+                vendedor: nombreVendedor,
+                texto: texto,
+                fecha: fechaActual,
+                hora: horaActual,
+                estado: 'PENDIENTE',
+                timestamp: Date.now()
+            }).then(() => {
+                cerrarModalMensajeGeneral();
+                alert("¡Aviso enviado a Almacén con éxito!");
+            }).catch(err => alert("Error al enviar mensaje: " + err.message));
+        }
+
+        function iniciarEscuchaMensajesGenerales() {
+            db.collection('mensajes').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                listaMensajesGeneral = [];
+                
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added' && !primerCarga && usuarioActual === 'almacen') {
+                        const data = change.doc.data();
+                        reproducirSonidoYAlerta("💬 Nuevo Aviso de Vendedor", `${data.vendedor}: ${data.texto}`);
+                    }
+                    if (change.type === 'modified' && !primerCarga && usuarioActual === 'piso') {
+                        const data = change.doc.data();
+                        if (data.vendedor === nombreVendedor && data.estado === 'RECIBIDO') {
+                            reproducirSonidoYAlerta("✅ Aviso Recibido", `Almacén marcó como recibido tu aviso: "${data.texto.substring(0, 25)}..."`);
+                        }
+                    }
+                });
+
+                snapshot.forEach(doc => {
+                    listaMensajesGeneral.push({ id: doc.id, ...doc.data() });
+                });
+
+                renderizarTablaMensajesAlmacen();
+                actualizarBadgesContadores();
+            });
+        }
+
+        function renderizarTablaMensajesAlmacen() {
+            const tbody = document.getElementById('tabla-mensajes-almacen');
+            if (!tbody) return;
+
+            if (listaMensajesGeneral.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-muted">No hay mensajes ni avisos pendientes</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            listaMensajesGeneral.forEach(m => {
+                let luz = obtenerLuzEstado(m.vendedor);
+                let textoCorto = m.texto.length > 40 ? m.texto.substring(0, 40) + '...' : m.texto;
+                let textoEscapado = m.texto.replace(/'/g, "\\'").replace(/\n/g, " ");
+                let estado = m.estado || 'PENDIENTE';
+
+                let badgeEstado = estado === 'RECIBIDO' 
+                    ? `<span class="bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/50 text-[10px] px-2 py-0.5 rounded-full font-bold">Recibido ✅</span>`
+                    : `<span class="bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/50 text-[10px] px-2 py-0.5 rounded-full font-bold">Pendiente ⏳</span>`;
+
+                let botonesAccion = estado === 'RECIBIDO'
+                    ? `<button type="button" onclick="event.stopPropagation(); eliminarMensajeGeneral('${m.id}')" class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow">Borrar</button>`
+                    : `<button type="button" onclick="event.stopPropagation(); marcarMensajeRecibido('${m.id}')" class="bg-green-600 hover:bg-green-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow">Marcar Recibido</button>`;
+
+                html += `
+                    <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer" onclick="abrirModalDetalleMensaje('${m.id}', '${m.vendedor}', '${m.fecha || ''} ${m.hora}', '${textoEscapado}', '${estado}')">
+                        <td class="py-3 px-3 font-semibold text-title text-xs">
+                            ${m.vendedor} ${luz}
+                            <div class="text-[10px] text-muted font-normal">${m.fecha || ''} ${m.hora}</div>
+                        </td>
+                        <td class="py-3 px-3 text-title font-medium text-xs md:text-sm">
+                            ${textoCorto}
+                            <div class="mt-1">${badgeEstado}</div>
+                        </td>
+                        <td class="py-3 px-3 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                ${botonesAccion}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function marcarMensajeRecibido(id) {
+            db.collection('mensajes').doc(id).update({
+                estado: 'RECIBIDO'
+            }).catch(err => alert("Error al actualizar estado: " + err.message));
+        }
+
+        function abrirModalDetalleMensaje(id, vendedor, hora, texto, estado = 'PENDIENTE') {
+            let luz = obtenerLuzEstado(vendedor);
+            const contenido = document.getElementById('contenido-detalle-mensaje');
+            const btnAccion = document.getElementById('btn-atender-mensaje-modal');
+
+            let badgeEstadoHtml = estado === 'RECIBIDO'
+                ? `<span class="bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-300 border border-green-300 text-xs px-2.5 py-1 rounded-full font-bold">Recibido ✅</span>`
+                : `<span class="bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 text-xs px-2.5 py-1 rounded-full font-bold">Pendiente ⏳</span>`;
+
+            if (contenido) {
+                contenido.innerHTML = `
+                    <div class="subcard-box p-3 rounded-xl border space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <p class="text-xs text-muted">De: <b class="text-title">${vendedor}</b> ${luz}</p>
+                            <div>${badgeEstadoHtml}</div>
+                        </div>
+                        <p class="text-[10px] text-muted">Fecha y Hora: <b>${hora}</b></p>
+                    </div>
+                    <div class="card-box p-4 rounded-xl border">
+                        <p class="text-sm font-semibold text-title leading-relaxed whitespace-pre-wrap">${texto}</p>
+                    </div>
+                `;
+            }
+
+            if (btnAccion) {
+                if (estado === 'RECIBIDO') {
+                    btnAccion.innerText = "Borrar Mensaje";
+                    btnAccion.className = "flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl transition text-xs shadow";
+                    btnAccion.onclick = function() {
+                        cerrarModalDetalleMensaje();
+                        eliminarMensajeGeneral(id);
+                    };
+                } else {
+                    btnAccion.innerText = "Marcar Recibido";
+                    btnAccion.className = "flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl transition text-xs shadow";
+                    btnAccion.onclick = function() {
+                        marcarMensajeRecibido(id);
+                        cerrarModalDetalleMensaje();
+                    };
+                }
+            }
+
+            document.getElementById('modal-detalle-mensaje').classList.remove('hidden');
+        }
+
+        function cerrarModalDetalleMensaje() {
+            document.getElementById('modal-detalle-mensaje').classList.add('hidden');
+        }
+
+        function eliminarMensajeGeneral(id) {
+            if (confirm("¿Estás seguro de borrar este aviso?")) {
+                db.collection('mensajes').doc(id).delete().catch(err => alert("Error: " + err.message));
+            }
+        }
+
+        function actualizarBadgesContadores() {
+            const badgeHeaderPedidos = document.getElementById('badge-header-pedidos');
+            const badgeHeaderMensajes = document.getElementById('badge-header-mensajes');
+            const badgeMenuPedidos = document.getElementById('badge-menu-pedidos');
+            const badgeMenuMensajes = document.getElementById('badge-mensajes-menu');
+
+            let pendientesCount = pedidos.filter(p => p.estado === 'SOLICITADO').length;
+            let mensajesCount = listaMensajesGeneral.filter(m => (m.estado || 'PENDIENTE') === 'PENDIENTE').length;
+
+            if (usuarioActual === 'almacen') {
+                if (badgeHeaderPedidos) {
+                    if (pendientesCount > 0) {
+                        badgeHeaderPedidos.innerText = `${pendientesCount}📦`;
+                        badgeHeaderPedidos.classList.remove('hidden');
+                    } else badgeHeaderPedidos.classList.add('hidden');
+                }
+
+                if (badgeHeaderMensajes) {
+                    if (mensajesCount > 0) {
+                        badgeHeaderMensajes.innerText = `${mensajesCount}💬`;
+                        badgeHeaderMensajes.classList.remove('hidden');
+                    } else badgeHeaderMensajes.classList.add('hidden');
+                }
+
+                if (badgeMenuPedidos) {
+                    if (pendientesCount > 0) {
+                        badgeMenuPedidos.innerText = pendientesCount;
+                        badgeMenuPedidos.classList.remove('hidden');
+                    } else badgeMenuPedidos.classList.add('hidden');
+                }
+
+                if (badgeMenuMensajes) {
+                    if (mensajesCount > 0) {
+                        badgeMenuMensajes.innerText = mensajesCount;
+                        badgeMenuMensajes.classList.remove('hidden');
+                    } else badgeMenuMensajes.classList.add('hidden');
+                }
+            } else {
+                if (badgeHeaderPedidos) badgeHeaderPedidos.classList.add('hidden');
+                if (badgeHeaderMensajes) badgeHeaderMensajes.classList.add('hidden');
             }
         }
 
@@ -964,17 +1274,13 @@
             const flecha = document.getElementById('flecha-surtido');
             if (cuerpo) {
                 cuerpo.classList.toggle('hidden');
-                if (flecha) {
-                    flecha.style.transform = cuerpo.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
-                }
+                if (flecha) flecha.style.transform = cuerpo.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
             }
         }
 
         document.addEventListener("visibilitychange", function() {
             if (document.visibilityState === "visible") {
-                if (db && typeof db.enableNetwork === 'function') {
-                    db.enableNetwork().catch(err => {});
-                }
+                if (db && typeof db.enableNetwork === 'function') db.enableNetwork().catch(err => {});
                 renderizarTablas();
                 if (usuarioActual === 'piso' && idUsuarioActualPiso) {
                     db.collection('vendedores').doc(idUsuarioActualPiso).set({
@@ -1008,118 +1314,75 @@
             document.getElementById('modal-alerta').classList.add('hidden');
         }
 
+        function mostrarAlertaClienteInmediata(data) {
+            const contenido = document.getElementById('contenido-alerta-cliente');
+            if (!contenido) return;
+
+            idPedidoClienteActivo = data.id || null;
+
+            contenido.innerHTML = `
+                <div class="subcard-box p-3.5 rounded-xl border space-y-1.5">
+                    <p class="text-xs text-muted">Vendedor: <b class="text-title">${data.vendedor}</b></p>
+                    <p class="text-xs text-muted">Código: <b class="font-mono text-blue-600 dark:text-blue-400 text-sm">${data.codigo}</b></p>
+                    <p class="text-xs text-muted">Descripción: <b class="text-title">${data.descripcion}</b></p>
+                    <p class="text-xs text-muted">Tallas: <b class="text-title">${data.tallas}</b></p>
+                    ${data.opcional ? `<p class="text-xs text-muted">Detalle: <b class="text-pink-600 dark:text-pink-400">${data.opcional}</b></p>` : ''}
+                </div>
+            `;
+            document.getElementById('modal-alerta-cliente').classList.remove('hidden');
+        }
+
+        function atenderClienteDesdeAlerta() {
+            if (idPedidoClienteActivo) {
+                db.collection('pedidos').doc(idPedidoClienteActivo).update({
+                    estado: 'EN_PREPARACION'
+                }).catch(err => console.error("Error al marcar atendiendo:", err));
+            }
+            cerrarModalAlertaCliente();
+        }
+
+        function cerrarModalAlertaCliente() {
+            document.getElementById('modal-alerta-cliente').classList.add('hidden');
+            idPedidoClienteActivo = null;
+        }
+
         function filtrarAlmacen(estado) {
             filtroAlmacenActual = estado;
             const btnTodos = document.getElementById('btn-filtro-todos');
             const btnSol = document.getElementById('btn-filtro-solicitado');
-            const btnPrep = document.getElementById('btn-filtro-preparacion');
+            const btnListos = document.getElementById('btn-filtro-listos');
 
-            [btnTodos, btnSol, btnPrep].forEach(b => {
+            [btnTodos, btnSol, btnListos].forEach(b => {
                 if(b) b.className = "px-3 py-1.5 rounded-lg text-xs font-bold subcard-box border text-muted hover:bg-slate-200 dark:hover:bg-slate-700 shadow-sm";
             });
 
             if (estado === 'TODOS' && btnTodos) btnTodos.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow";
             if (estado === 'SOLICITADO' && btnSol) btnSol.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white shadow";
-            if (estado === 'EN_PREPARACION' && btnPrep) btnPrep.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow";
+            if (estado === 'COMPLETADO' && btnListos) btnListos.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow";
 
             renderizarTablas();
         }
 
         function cambiarTabAlmacen(tab) {
             const secPedidos = document.getElementById('seccion-almacen-pedidos');
-            const secTop = document.getElementById('seccion-almacen-top');
+            const secMensajes = document.getElementById('seccion-almacen-mensajes');
             const secCatalogo = document.getElementById('seccion-almacen-catalogo');
             const secVendedores = document.getElementById('seccion-almacen-vendedores');
 
-            [secPedidos, secTop, secCatalogo, secVendedores].forEach(s => {
+            [secPedidos, secMensajes, secCatalogo, secVendedores].forEach(s => {
                 if(s) s.classList.add('hidden');
             });
 
             if (tab === 'pedidos') {
                 if(secPedidos) secPedidos.classList.remove('hidden');
-            } else if (tab === 'top') {
-                if(secTop) secTop.classList.remove('hidden');
-                renderizarTopSurtido();
+            } else if (tab === 'mensajes') {
+                if(secMensajes) secMensajes.classList.remove('hidden');
             } else if (tab === 'catalogo') {
                 if(secCatalogo) secCatalogo.classList.remove('hidden');
                 renderizarTablaCatalogo();
             } else if (tab === 'vendedores') {
                 if(secVendedores) secVendedores.classList.remove('hidden');
             }
-        }
-
-        function renderizarTopSurtido() {
-            const tbody = document.getElementById('tabla-top-surtido');
-            if (!tbody) return;
-
-            const tipo = document.getElementById('top-tipo') ? document.getElementById('top-tipo').value : 'mas';
-            const dias = parseInt(document.getElementById('top-tiempo') ? document.getElementById('top-tiempo').value : '7', 10);
-            
-            const ahora = Date.now();
-            const limiteTiempo = ahora - (dias * 24 * 60 * 60 * 1000);
-
-            const pedidosFiltrados = pedidos.filter(p => p.timestamp >= limiteTiempo);
-
-            const conteo = {};
-            pedidosFiltrados.forEach(p => {
-                const cod = p.codigo || 'S/C';
-                if (!conteo[cod]) {
-                    conteo[cod] = {
-                        codigo: cod,
-                        descripcion: p.descripcion || 'Sin descripción',
-                        categoria: p.categoria || 'N/A',
-                        total: 0
-                    };
-                }
-                conteo[cod].total += 1;
-            });
-
-            let listaItems = Object.values(conteo);
-
-            if (tipo === 'menos') {
-                listaCatalogo.forEach(cat => {
-                    if (!conteo[cat.codigo]) {
-                        listaItems.push({
-                            codigo: cat.codigo,
-                            descripcion: cat.descripcion,
-                            categoria: cat.categoria,
-                            total: 0
-                        });
-                    }
-                });
-            }
-
-            listaItems.sort((a, b) => {
-                if (tipo === 'mas') {
-                    return b.total - a.total;
-                } else {
-                    return a.total - b.total;
-                }
-            });
-
-            const top10 = listaItems.slice(0, 10);
-
-            if (top10.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-muted">No hay registros suficientes para este periodo</td></tr>`;
-                return;
-            }
-
-            let html = '';
-            top10.forEach((item, index) => {
-                let badgeColor = tipo === 'mas' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300';
-                html += `
-                    <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50">
-                        <td class="py-3 px-3 font-bold text-muted">${index + 1}</td>
-                        <td class="py-3 px-3 font-mono font-bold text-blue-600 dark:text-blue-400 text-xs">${item.codigo}</td>
-                        <td class="py-3 px-3 font-medium text-title text-xs">${item.descripcion}</td>
-                        <td class="py-3 px-3"><span class="subcard-box text-title text-[10px] px-1.5 py-0.5 rounded-full font-semibold border">${item.categoria}</span></td>
-                        <td class="py-3 px-3 text-right">
-                            <span class="text-xs px-2.5 py-1 rounded-full font-bold ${badgeColor}">${item.total} solicitudes</span>
-                        </td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
         }
 
         function iniciarEscuchaCatalogo() {
@@ -1202,6 +1465,29 @@
             }, 100);
         }
 
+        function limpiarFormularioPiso() {
+            document.getElementById('codigo').value = '';
+            document.getElementById('descripcion').value = '';
+            document.getElementById('opcional').value = '';
+            document.getElementById('opcional-cliente').value = '';
+            document.getElementById('cantidad').value = '';
+
+            const seccionDetalles = document.getElementById('seccion-detalles-pedido');
+            const mensajeEl = document.getElementById('mensaje-busqueda-codigo');
+            const sugDiv = document.getElementById('sugerencias-codigo');
+
+            if (seccionDetalles) seccionDetalles.classList.add('hidden');
+            if (mensajeEl) mensajeEl.classList.add('hidden');
+            if (sugDiv) sugDiv.classList.add('hidden');
+
+            document.querySelectorAll('.chk-talla').forEach(cb => cb.checked = false);
+            if (document.getElementById('chk-todas')) document.getElementById('chk-todas').checked = false;
+            tallasSeleccionadas = [];
+            actualizarTallas();
+
+            document.getElementById('codigo').focus();
+        }
+
         function guardarEnCatalogo(e) {
             e.preventDefault();
             const codigo = document.getElementById('cat-codigo').value.trim();
@@ -1209,15 +1495,6 @@
             const categoria = document.getElementById('cat-categoria').value;
 
             if (!codigo || !descripcion) return alert("Completa el código y la descripción");
-
-            const existe = listaCatalogo.some(item => item.codigo.toLowerCase() === codigo.toLowerCase());
-            if (existe) {
-                mostrarModalAlerta(
-                    "Referencia Ya Existente", 
-                    `¡El código "${codigo}" ya se encuentra registrado en el catálogo!`
-                );
-                return;
-            }
 
             db.collection('catalogo').doc(codigo).set({
                 codigo,
@@ -1232,6 +1509,23 @@
             }).catch(err => alert("Error al guardar: " + err.message));
         }
 
+        function editarEnCatalogo(codigo, descripcion, categoria) {
+            if (confirm(`¿Deseas editar la referencia "${codigo}"?`)) {
+                const form = document.getElementById('formulario-registro-catalogo');
+                if (form && form.classList.contains('hidden')) toggleFormularioCatalogo();
+
+                document.getElementById('cat-codigo').value = codigo;
+                document.getElementById('cat-descripcion').value = descripcion;
+                document.getElementById('cat-categoria').value = categoria;
+
+                const tituloForm = document.getElementById('titulo-form-catalogo');
+                if (tituloForm) tituloForm.innerHTML = `<span>&#128221;</span> Editando Referencia (${codigo})`;
+
+                document.getElementById('cat-descripcion').focus();
+                form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
         function renderizarTablaCatalogo() {
             const tbody = document.getElementById('tabla-catalogo');
             if (!tbody) return;
@@ -1240,9 +1534,7 @@
             
             const filtrados = listaCatalogo.filter(item => {
                 if (filtroCategoriaCatalogo !== 'TODOS') {
-                    if (!item.categoria || item.categoria.toLowerCase() !== filtroCategoriaCatalogo.toLowerCase()) {
-                        return false;
-                    }
+                    if (!item.categoria || item.categoria.toLowerCase() !== filtroCategoriaCatalogo.toLowerCase()) return false;
                 }
                 if (filtroTexto) {
                     const coincide = item.codigo.toLowerCase().includes(filtroTexto) || 
@@ -1260,13 +1552,17 @@
 
             let html = '';
             filtrados.forEach(item => {
+                let descEscapada = item.descripcion.replace(/'/g, "\\'");
                 html += `
                     <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/50">
                         <td class="py-2.5 px-3 font-mono font-bold text-blue-600 dark:text-blue-400 text-xs">${item.codigo}</td>
                         <td class="py-2.5 px-3 text-title font-medium text-xs">${item.descripcion}</td>
                         <td class="py-2.5 px-3"><span class="subcard-box text-title text-[10px] px-1.5 py-0.5 rounded-full font-semibold border">${item.categoria}</span></td>
                         <td class="py-2.5 px-3 text-right">
-                            <button type="button" onclick="eliminarDelCatalogo('${item.codigo}')" class="bg-red-600 text-white px-2 py-1 rounded-lg text-[10px] font-semibold hover:bg-red-700 shadow">Eliminar</button>
+                            <div class="flex items-center justify-end gap-1">
+                                <button type="button" onclick="editarEnCatalogo('${item.codigo}', '${descEscapada}', '${item.categoria}')" class="bg-amber-500 text-white px-2 py-1 rounded-lg text-[10px] font-semibold hover:bg-amber-600 shadow">Editar</button>
+                                <button type="button" onclick="eliminarDelCatalogo('${item.codigo}')" class="bg-red-600 text-white px-2 py-1 rounded-lg text-[10px] font-semibold hover:bg-red-700 shadow">Eliminar</button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -1410,9 +1706,7 @@
             const ahora = Date.now();
             listaVendedores.forEach(v => {
                 let conectadoReal = false;
-                if (v.conectado && v.ultimaConexion) {
-                    conectadoReal = (ahora - v.ultimaConexion < 45000);
-                }
+                if (v.conectado && v.ultimaConexion) conectadoReal = (ahora - v.ultimaConexion < 45000);
 
                 let colorLuz = conectadoReal ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500';
                 let textoEstado = conectadoReal ? 'Conectado (En la app)' : 'Desconectado';
@@ -1510,8 +1804,11 @@
         function loginPiso(e) {
             e.preventDefault();
             ocultarError();
-            const usuario = document.getElementById('usuario-vendedor').value.trim().toLowerCase();
-            const password = document.getElementById('password-vendedor').value.trim();
+            const usuarioInput = document.getElementById('usuario-vendedor');
+            const passwordInput = document.getElementById('password-vendedor');
+            const usuario = usuarioInput.value.trim().toLowerCase();
+            const password = passwordInput.value.trim();
+
             if (!usuario || !password) return mostrarError("Por favor ingresa usuario y contraseña.");
 
             const btnLogin = document.getElementById('btn-login-piso');
@@ -1520,12 +1817,16 @@
             db.collection('vendedores').doc(usuario).get().then((doc) => {
                 if (!doc.exists) {
                     if (btnLogin) btnLogin.innerText = "Entrar a Piso de Venta";
+                    passwordInput.value = '';
+                    passwordInput.focus();
                     return mostrarError("El usuario no existe o fue eliminado.");
                 }
 
                 const data = doc.data();
                 if (data.password !== password) {
                     if (btnLogin) btnLogin.innerText = "Entrar a Piso de Venta";
+                    passwordInput.value = '';
+                    passwordInput.focus();
                     return mostrarError("Contraseña incorrecta.");
                 }
 
@@ -1572,6 +1873,8 @@
                 }, 100);
             }).catch(err => {
                 if (btnLogin) btnLogin.innerText = "Entrar a Piso de Venta";
+                passwordInput.value = '';
+                passwordInput.focus();
                 mostrarError("Error de conexion al verificar usuario.");
             });
         }
@@ -1579,9 +1882,12 @@
         function entrarAlmacenDirecto(e) {
             if (e) e.preventDefault();
             ocultarError();
-            const pass = document.getElementById('password-almacen').value.trim();
+            const passInput = document.getElementById('password-almacen');
+            const pass = passInput.value.trim();
             
             if (pass !== 'surty1234') {
+                passInput.value = '';
+                passInput.focus();
                 return mostrarError("Contraseña de administrador incorrecta.");
             }
 
@@ -1670,34 +1976,23 @@
             document.getElementById('modal-scanner').classList.remove('hidden');
             const tituloModal = document.getElementById('titulo-modal-scanner');
             if (tituloModal) {
-                if (modo === 'catalogo') {
-                    tituloModal.innerText = 'Escáner para Catálogo';
-                } else if (modo === 'busqueda-catalogo') {
-                    tituloModal.innerText = 'Escáner para Buscar en Catálogo';
-                } else {
-                    tituloModal.innerText = 'Escáner de Alta Precisión';
-                }
+                if (modo === 'catalogo') tituloModal.innerText = 'Escáner para Catálogo';
+                else if (modo === 'busqueda-catalogo') tituloModal.innerText = 'Escáner para Buscar en Catálogo';
+                else tituloModal.innerText = 'Escáner de Alta Precisión';
             }
             torchActive = false;
             
             if (html5QrCode) {
                 try {
-                    html5QrCode.stop().catch(() => {}).finally(() => {
-                        iniciarLectorCamara();
-                    });
+                    html5QrCode.stop().catch(() => {}).finally(() => { iniciarLectorCamara(); });
                     return;
                 } catch(e) {}
             }
             iniciarLectorCamara();
         }
 
-        function abrirScannerCatalogo() {
-            abrirScanner('catalogo');
-        }
-
-        function abrirScannerBusquedaCatalogo() {
-            abrirScanner('busqueda-catalogo');
-        }
+        function abrirScannerCatalogo() { abrirScanner('catalogo'); }
+        function abrirScannerBusquedaCatalogo() { abrirScanner('busqueda-catalogo'); }
 
         function iniciarLectorCamara() {
             html5QrCode = new Html5Qrcode("reader");
@@ -1717,9 +2012,7 @@
             };
 
             const onSuccess = (decodedText) => {
-                if ("vibrate" in navigator) {
-                    try { navigator.vibrate(100); } catch(e) {}
-                }
+                if ("vibrate" in navigator) { try { navigator.vibrate(100); } catch(e) {} }
                 
                 if (modoEscannerActual === 'catalogo') {
                     document.getElementById('cat-codigo').value = decodedText;
@@ -1736,18 +2029,8 @@
                 }
             };
 
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                config, 
-                onSuccess,
-                () => {}
-            ).catch((err) => {
-                html5QrCode.start(
-                    { facingMode: "user" },
-                    config,
-                    onSuccess,
-                    () => {}
-                ).catch((err2) => {
+            html5QrCode.start({ facingMode: "environment" }, config, onSuccess, () => {}).catch((err) => {
+                html5QrCode.start({ facingMode: "user" }, config, onSuccess, () => {}).catch((err2) => {
                     alert("No se pudo acceder a la cámara.");
                     cerrarScanner();
                 });
@@ -1769,15 +2052,11 @@
                                 ? "flex-1 bg-amber-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow ring-2 ring-amber-300 flex items-center justify-center gap-2"
                                 : "flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow flex items-center justify-center gap-2";
                         }
-                    }).catch(err => {
-                        alert("La linterna no está soportada en este dispositivo.");
-                    });
+                    }).catch(err => alert("La linterna no está soportada en este dispositivo."));
                 } else {
                     alert("La linterna no está soportada.");
                 }
-            } catch(e) {
-                alert("No se pudo activar la linterna.");
-            }
+            } catch(e) { alert("No se pudo activar la linterna."); }
         }
 
         function cerrarScanner() {
@@ -1785,9 +2064,7 @@
             if (html5QrCode) {
                 try {
                     if (html5QrCode.isScanning) {
-                        html5QrCode.stop().then(() => {
-                            html5QrCode.clear();
-                        }).catch(() => {});
+                        html5QrCode.stop().then(() => { html5QrCode.clear(); }).catch(() => {});
                     }
                 } catch(e) {}
             }
@@ -1826,25 +2103,11 @@
 
             localStorage.setItem('surty_borrador', JSON.stringify(listaTemporalVendedor));
             actualizarUIListaTemporal();
+            limpiarFormularioPiso();
 
-            document.getElementById('codigo').value = '';
-            document.getElementById('descripcion').value = '';
-            document.getElementById('opcional').value = '';
-            document.getElementById('opcional-cliente').value = '';
-            document.getElementById('cantidad').value = '';
-
-            document.getElementById('seccion-detalles-pedido').classList.add('hidden');
-            document.getElementById('mensaje-busqueda-codigo').classList.add('hidden');
-
-            document.querySelectorAll('.chk-talla').forEach(cb => cb.checked = false);
-            if (document.getElementById('chk-todas')) document.getElementById('chk-todas').checked = false;
-            tallasSeleccionadas = [];
-            actualizarTallas();
-            
             document.getElementById('categoria').value = categoriaReciente;
             document.getElementById('prioridad').value = prioridadReciente;
             actualizarVistaPrioridad();
-            document.getElementById('codigo').focus();
         }
 
         function actualizarUIListaTemporal() {
@@ -1854,7 +2117,6 @@
             const seccionEnviarDirecto = document.getElementById('seccion-enviar-almacen-directo');
 
             const total = listaTemporalVendedor.length;
-
             if (countModal) countModal.innerText = total;
             if (countBtn) countBtn.innerText = total;
 
@@ -1866,7 +2128,6 @@
                 seccionEnviarDirecto.classList.add('hidden');
                 cerrarModalListaTemporal();
             }
-
             renderizarContenidoModalListaTemporal();
         }
 
@@ -1928,9 +2189,7 @@
                 let cantidad = prioridad === 'Surtido' ? document.getElementById('cantidad').value : '';
 
                 let tallasTexto = 'Unica';
-                if (tallasSeleccionadas.length > 0) {
-                    tallasTexto = tallasSeleccionadas.join(', ');
-                }
+                if (tallasSeleccionadas.length > 0) tallasTexto = tallasSeleccionadas.join(', ');
 
                 listaTemporalVendedor.push({
                     tempId: Date.now() + Math.random(),
@@ -1987,9 +2246,7 @@
                 localStorage.removeItem('surty_borrador');
                 actualizarUIListaTemporal();
                 cerrarModalListaTemporal();
-
-                const formPedido = document.getElementById('form-pedido');
-                if (formPedido) formPedido.reset();
+                limpiarFormularioPiso();
 
                 const cuerpoForm = document.getElementById('cuerpo-formulario-pedido');
                 const flechaSurtido = document.getElementById('flecha-surtido');
@@ -2004,9 +2261,8 @@
 
         function abrirGestionAlmacen(idOGrupo, esGrupo = false) {
             let items = [];
-            if (esGrupo) {
-                items = pedidos.filter(p => p.grupoId === idOGrupo);
-            } else {
+            if (esGrupo) items = pedidos.filter(p => p.grupoId === idOGrupo);
+            else {
                 const p = pedidos.find(item => item.id === idOGrupo);
                 if (p) items.push(p);
             }
@@ -2045,22 +2301,16 @@
                 let textoEstado = item.estado;
 
                 if (item.estado === 'SOLICITADO') { badgeColor = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'; textoEstado = 'Solicitado'; }
-                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60'; textoEstado = 'Preparando...'; }
+                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60'; textoEstado = 'Atendiendo...'; }
                 if (item.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-300 dark:border-orange-800/60'; textoEstado = 'No hay'; }
                 if (item.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800/60'; textoEstado = 'Agotado'; }
-                if (item.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/60'; textoEstado = 'Listo / Recibido'; }
+                if (item.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/60'; textoEstado = 'Listo'; }
 
                 let botonesOpciones = '';
-
                 if (item.estado === 'COMPLETADO') {
-                    botonesOpciones = `
-                        <button type="button" onclick="eliminarPedidoDesdeAlmacen('${item.id}', '${idOGrupo}', ${esGrupo})" class="w-full sm:w-auto px-4 py-1.5 subcard-box text-title border rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow ml-auto">Eliminar</button>
-                    `;
+                    botonesOpciones = `<button type="button" onclick="eliminarPedidoDesdeAlmacen('${item.id}', '${idOGrupo}', ${esGrupo})" class="w-full sm:w-auto px-4 py-1.5 subcard-box text-title border rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow ml-auto">Eliminar</button>`;
                 } else {
-                    let botonNoHay = '';
-                    if (item.prioridad === 'Cliente') {
-                        botonNoHay = `<button type="button" onclick="cambiarEstadoIndividual('${item.id}', 'NO_HAY', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-orange-600 text-white rounded text-[11px] font-semibold hover:bg-orange-700">No hay</button>`;
-                    }
+                    let botonNoHay = item.prioridad === 'Cliente' ? `<button type="button" onclick="cambiarEstadoIndividual('${item.id}', 'NO_HAY', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-orange-600 text-white rounded text-[11px] font-semibold hover:bg-orange-700">No hay</button>` : '';
 
                     botonesOpciones = `
                         <button type="button" onclick="cambiarEstadoIndividual('${item.id}', 'COMPLETADO', '${idOGrupo}', ${esGrupo})" class="px-2.5 py-1 bg-green-600 text-white rounded text-[11px] font-semibold hover:bg-green-700">Listo</button>
@@ -2094,11 +2344,7 @@
         }
 
         function cambiarEstadoIndividual(id, nuevoEstado, idOGrupo, esGrupo) {
-            let nombresEstado = {
-                'COMPLETADO': 'Listo',
-                'AGOTADO': 'Agotado',
-                'NO_HAY': 'No hay'
-            };
+            let nombresEstado = { 'COMPLETADO': 'Listo', 'AGOTADO': 'Agotado', 'NO_HAY': 'No hay', 'EN_PREPARACION': 'Atendiendo' };
             let nombreAmigable = nombresEstado[nuevoEstado] || nuevoEstado;
 
             if (confirm(`¿Estás seguro de cambiar el estado a "${nombreAmigable}"?`)) {
@@ -2118,11 +2364,8 @@
                 db.collection('pedidos').doc(idItem).delete().then(() => {
                     pedidos = pedidos.filter(p => p.id !== idItem);
                     const restantes = esGrupo ? pedidos.filter(p => p.grupoId === idOGrupo) : pedidos.filter(p => p.id === idOGrupo);
-                    if (restantes.length > 0) {
-                        abrirGestionAlmacen(idOGrupo, esGrupo);
-                    } else {
-                        cerrarGestionAlmacen();
-                    }
+                    if (restantes.length > 0) abrirGestionAlmacen(idOGrupo, esGrupo);
+                    else cerrarGestionAlmacen();
                 }).catch(err => alert("Error al eliminar: " + err.message));
             }
         }
@@ -2136,9 +2379,7 @@
                 if (esGrupo) {
                     const itemsDelGrupo = pedidos.filter(p => p.grupoId === idOGrupo);
                     const batch = db.batch();
-                    itemsDelGrupo.forEach(item => {
-                        batch.delete(db.collection('pedidos').doc(item.id));
-                    });
+                    itemsDelGrupo.forEach(item => batch.delete(db.collection('pedidos').doc(item.id)));
                     batch.commit().catch(err => alert("Error al eliminar grupo: " + err.message));
                 } else {
                     db.collection('pedidos').doc(idOGrupo).delete().catch(err => alert("Error al eliminar: " + err.message));
@@ -2148,9 +2389,8 @@
 
         function abrirGestionPiso(idOGrupo, esGrupo = false) {
             let items = [];
-            if (esGrupo) {
-                items = pedidos.filter(p => p.grupoId === idOGrupo);
-            } else {
+            if (esGrupo) items = pedidos.filter(p => p.grupoId === idOGrupo);
+            else {
                 const p = pedidos.find(item => item.id === idOGrupo);
                 if (p) items.push(p);
             }
@@ -2188,7 +2428,7 @@
                 let textoEstado = item.estado;
 
                 if (item.estado === 'SOLICITADO') { badgeColor = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'; textoEstado = 'Solicitado'; }
-                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60'; textoEstado = 'Preparando...'; }
+                if (item.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60'; textoEstado = 'Atendiendo...'; }
                 if (item.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-300 dark:border-orange-800/60'; textoEstado = 'No hay'; }
                 if (item.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800/60'; textoEstado = 'Agotado'; }
                 if (item.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/60'; textoEstado = 'Listo'; }
@@ -2209,17 +2449,9 @@
                 `;
             });
 
-            let htmlAcciones = '';
-
-            if (primerItem.vendedor === nombreVendedor) {
-                htmlAcciones += `
-                    <button type="button" onclick="borrarPedidoPisoGrupo('${idOGrupo}', ${esGrupo})" class="w-full bg-red-600 text-white font-semibold py-2.5 rounded-xl hover:bg-red-700 transition text-xs shadow">&#10005; Eliminar Solicitud</button>
-                `;
-            } else {
-                htmlAcciones += `
-                    <button type="button" onclick="cerrarGestionPiso()" class="w-full subcard-box text-title font-semibold py-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition text-xs border">Cerrar</button>
-                `;
-            }
+            let htmlAcciones = primerItem.vendedor === nombreVendedor ? 
+                `<button type="button" onclick="borrarPedidoPisoGrupo('${idOGrupo}', ${esGrupo})" class="w-full bg-red-600 text-white font-semibold py-2.5 rounded-xl hover:bg-red-700 transition text-xs shadow">&#10005; Eliminar Solicitud</button>` :
+                `<button type="button" onclick="cerrarGestionPiso()" class="w-full subcard-box text-title font-semibold py-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition text-xs border">Cerrar</button>`;
 
             document.getElementById('contenido-detalle-piso').innerHTML = htmlDetalle;
             document.getElementById('acciones-detalle-piso').innerHTML = htmlAcciones;
@@ -2231,9 +2463,7 @@
                 cerrarGestionPiso();
                 const items = esGrupo ? pedidos.filter(p => p.grupoId === idOGrupo) : pedidos.filter(p => p.id === idOGrupo);
                 const batch = db.batch();
-                items.forEach(item => {
-                    batch.delete(db.collection('pedidos').doc(item.id));
-                });
+                items.forEach(item => batch.delete(db.collection('pedidos').doc(item.id)));
                 batch.commit().catch(err => alert("Error al eliminar: " + err.message));
             }
         }
@@ -2242,12 +2472,8 @@
             document.getElementById('modal-gestion-piso').classList.add('hidden');
         }
 
-        db.collection('pedidos')
-            .orderBy('timestamp', 'desc')
-            .limit(100)
-            .onSnapshot((snapshot) => {
+        db.collection('pedidos').orderBy('timestamp', 'desc').limit(100).onSnapshot((snapshot) => {
             pedidos = [];
-
             if (primerCarga) {
                 primerCarga = false;
             } else {
@@ -2255,18 +2481,19 @@
                     const data = change.doc.data();
                     if (change.type === 'added' && usuarioActual === 'almacen') {
                         reproducirSonidoYAlerta("Nuevo Pedido", `El vendedor ${data.vendedor} solicito: ${data.descripcion}`);
+                        if (data.prioridad === 'Cliente') mostrarAlertaClienteInmediata(data);
                     }
                     if (change.type === 'modified' && usuarioActual === 'piso' && data.vendedor === nombreVendedor) {
-                        if (data.estado === 'COMPLETADO') reproducirSonidoYAlerta("¡Pedido Listo!", `Almacen marco como listo: ${data.descripcion}`);
+                        if (data.estado === 'EN_PREPARACION') reproducirSonidoYAlerta("Atendiendo Pedido", `Almacén está atendiendo tu solicitud: ${data.descripcion}`);
+                        else if (data.estado === 'COMPLETADO') reproducirSonidoYAlerta("¡Pedido Listo!", `Almacén marcó como listo: ${data.descripcion}`);
                         else if (data.estado === 'NO_HAY') reproducirSonidoYAlerta("Artículo No Disponible", `No hay stock para: ${data.descripcion}`);
-                        else if (data.estado === 'AGOTADO') reproducirSonidoYAlerta("Artículo Agotado", `${data.descripcion} esta agotado.`);
+                        else if (data.estado === 'AGOTADO') reproducirSonidoYAlerta("Artículo Agotado", `${data.descripcion} está agotado.`);
                     }
                 });
             }
 
             snapshot.forEach((doc) => {
                 const data = doc.data();
-
                 pedidos.push({
                     id: data.id || doc.id,
                     grupoId: data.grupoId || null,
@@ -2287,6 +2514,7 @@
                 });
             });
             renderizarTablas();
+            actualizarBadgesContadores();
         });
 
         function renderizarTablas() {
@@ -2311,7 +2539,6 @@
                 pedidos.forEach(p => {
                     let esGrupo = !!p.grupoId;
                     let idClave = esGrupo ? p.grupoId : p.id;
-
                     if (procesadosPiso.has(idClave)) return;
                     procesadosPiso.add(idClave);
 
@@ -2319,6 +2546,7 @@
                     let textoEstado = p.estado;
 
                     if (p.estado === 'SOLICITADO') { badgeColor = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'; textoEstado = 'Solicitado'; }
+                    if (p.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60'; textoEstado = 'Atendiendo...'; }
                     if (p.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-300 dark:border-orange-800/60'; textoEstado = 'No hay'; }
                     if (p.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800/60'; textoEstado = 'Agotado'; }
                     if (p.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/60'; textoEstado = 'Listo'; }
@@ -2363,7 +2591,6 @@
                 });
 
                 const procesadosAlmacen = new Set();
-
                 pedidos.forEach(p => {
                     if (p.estado === 'SOLICITADO') pendientesCount++;
 
@@ -2377,7 +2604,6 @@
 
                     let esGrupo = !!p.grupoId;
                     let idClave = esGrupo ? p.grupoId : p.id;
-
                     if (procesadosAlmacen.has(idClave)) return;
                     procesadosAlmacen.add(idClave);
 
@@ -2413,6 +2639,7 @@
                         let textoEstado = p.estado;
 
                         if (p.estado === 'SOLICITADO') { badgeColor = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'; textoEstado = 'Solicitado'; }
+                        if (p.estado === 'EN_PREPARACION') { badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60'; textoEstado = 'Atendiendo...'; }
                         if (p.estado === 'NO_HAY') { badgeColor = 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-300 dark:border-orange-800/60'; textoEstado = 'No hay'; }
                         if (p.estado === 'AGOTADO') { badgeColor = 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800/60'; textoEstado = 'Agotado'; }
                         if (p.estado === 'COMPLETADO') { badgeColor = 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-300 border border-green-300 dark:border-green-800/60'; textoEstado = 'Listo'; }
